@@ -11,6 +11,7 @@ import {
 import {ContactService} from "./contact.service";
 import {Contact} from "./contact.interface";
 import {ContactDTO} from "./contact.dto";
+import {setNewContact} from "./setNewContact";
 
 @Controller('contacts')
 export class ContactController {
@@ -37,15 +38,7 @@ export class ContactController {
 
     @Post('add')
     async addNewContact(@Query('id') id: number, @Body() contactDTO: ContactDTO){
-        let contact = new Contact();
-        contact.first_name = contactDTO.first_name;
-        contact.last_name = contactDTO.last_name;
-        contact.email = contactDTO.email;
-        contact.tel = contactDTO.tel;
-        contact.supplier_id = id;
-        console.log(contactDTO);
-
-        return await this.contactService.addContact(contact);
+        return await this.contactService.addContact(setNewContact(id,contactDTO));
     }
 
     @Get('remove')
