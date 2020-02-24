@@ -1,6 +1,10 @@
 #Folders
-dist/*
 node_modules/*
+dist/*
+POorganizer Documentation/*
+.idea/*
+
+#File extensions
+*.js
 
 #Files
-*.js
