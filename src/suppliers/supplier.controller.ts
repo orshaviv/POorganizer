@@ -12,11 +12,10 @@ import {SupplierService} from "./supplier.service";
 import {Supplier} from "./supplier.interface";
 import {ContactService} from "../contacts/contact.service";
 import {ContactDTO} from "../contacts/contact.dto";
-import {Contact} from "../contacts/contact.interface";
 
 @Controller('suppliers')
 export class SupplierController {
-    constructor(private readonly supplierService: SupplierService, private readonly contactService: ContactService) {}
+    constructor(private readonly supplierService: SupplierService, private http: HttpService) {}
 
     @Get()
     welcomeScreen(){
@@ -59,14 +58,6 @@ export class SupplierController {
 
     @Post('addcontact')
     async addNewContact(@Query('id') id: number, @Body() contactDTO: ContactDTO){
-        let contact = new Contact();
-        contact.first_name = contactDTO.first_name;
-        contact.last_name = contactDTO.last_name;
-        contact.email = contactDTO.email;
-        contact.tel = contactDTO.tel;
-        contact.supplier_id = id;
-        console.log(contactDTO);
-
-        return await this.contactService.addContact(contact);
+        this.http.get;
     }
 }
