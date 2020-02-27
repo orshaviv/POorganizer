@@ -43,7 +43,7 @@ export class ContactService {
         }
         await this.repo.save(contact);
         throw new HttpException('Contact has been added', 200);
-        
+
         /*
         return this.supplierService.getSupplierById(contactDTO.supplier_id).then((supplier) => {
             if (!supplier){
@@ -68,7 +68,7 @@ export class ContactService {
             await this.repo.remove(contactToRemove);
             throw new HttpException('Contact has been removed', 200);
         } else {
-            throw new HttpException('Contact id not found', 422);
+            throw new HttpException('Contact id not found', 404);
         }
     }
 }

@@ -15,6 +15,7 @@ import {ContactDTO} from "../contacts/contact.dto";
 import {Contact} from "../contacts/contact.interface";
 import {setNewContact} from "../contacts/setNewContact";
 import {errorObject} from "rxjs/internal-compatibility";
+import {SupplierDTO} from "./supplier.dto";
 
 @Controller('suppliers')
 export class SupplierController {
@@ -39,15 +40,9 @@ export class SupplierController {
         return supplier;
     }
 
-    @Get('add')
-    async addNewSupplier(@Query('name') name: string){
-        if (name.length>45){
-            throw new HttpException('Wrong input',422);
-        }
-        let supplier = new Supplier();
-        supplier.supplier_name = name;
-
-        return await this.supplierService.addSupplier(supplier);
+    @Post('add')
+    async addNewSupplier(@Body() supplierDTO: SupplierDTO){
+        return await this.supplierService.addSupplier(supplierDTO);
     }
 
     @Get('remove')

@@ -2,6 +2,7 @@ import {HttpException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Supplier} from "./supplier.interface";
 import {Repository} from "typeorm";
+import {SupplierDTO} from "./supplier.dto";
 
 @Injectable()
 export class SupplierService {
@@ -12,8 +13,8 @@ export class SupplierService {
         return 'Welcome to suppliers screen. For all suppliers go to /suppliers/all. ';
     }
 
-    getAllSuppliers() {
-        return this.repo.find({});
+    async getAllSuppliers() {
+        return await this.repo.find({});
     }
 
     async getSupplierById(id: number) {
@@ -25,11 +26,19 @@ export class SupplierService {
         return supplier;
     }
 
-    async addSupplier(supplier: Supplier) {
-        let result = await this.repo.findOne({supplier_name: supplier.supplier_name})
-        if (result) {
-            throw new HttpException('Supplier already exists', 422);
+    async addSupplier(supplierDTO: SupplierDTO) {
+        if (supplierDTO.name.length <= 45){
+            let result = await this.repo.findOne({supplier_name: supplierDTO.name});
+            if (result){
+                throw new HttpException('Supplier already exists', 422);
+            }
+        }else{
+            throw new HttpException('Wrong input',422);
         }
+
+        let supplier = new Supplier();
+        supplier.supplier_name = supplierDTO.name;
+
         await this.repo.save(supplier);
         throw new HttpException('Supplier has been added', 200);
     }
