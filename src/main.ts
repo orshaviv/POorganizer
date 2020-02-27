@@ -6,5 +6,5 @@ async function bootstrap(){
     await app.listen(3000);
 }
 
-bootstrap().catch(error => console.log(error));
+bootstrap().then(r => r);
 

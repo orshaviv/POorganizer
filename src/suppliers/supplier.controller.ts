@@ -14,6 +14,7 @@ import {ContactService} from "../contacts/contact.service";
 import {ContactDTO} from "../contacts/contact.dto";
 import {Contact} from "../contacts/contact.interface";
 import {setNewContact} from "../contacts/setNewContact";
+import {errorObject} from "rxjs/internal-compatibility";
 
 @Controller('suppliers')
 export class SupplierController {
@@ -31,12 +32,11 @@ export class SupplierController {
 
     @Get('id')
     async getById(@Query('id') id: number){
-        const result = await this.supplierService.getSupplierById(id);
-        if (!result){
-            throw new NotFoundException('no such supplier id exists');
-        }
-
-        return result;
+        let supplier = await this.supplierService.getSupplierById(id).catch(err => {
+            console.log('controller: supplier not found');
+            return err;
+        });
+        return supplier;
     }
 
     @Get('add')
@@ -59,7 +59,7 @@ export class SupplierController {
     }
 
     @Post('addcontact')
-    async addNewContact(@Query('id') id: number, @Body() contactDTO: ContactDTO){
-        return await this.contactService.addContact(setNewContact(id,contactDTO));
+    async addNewContact(@Body() contactDTO: ContactDTO){
+        return await this.contactService.addContact(contactDTO);
     }
 }

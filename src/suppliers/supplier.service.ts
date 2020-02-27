@@ -1,4 +1,4 @@
-import {HttpException, Injectable} from "@nestjs/common";
+import {HttpException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Supplier} from "./supplier.interface";
 import {Repository} from "typeorm";
@@ -16,8 +16,13 @@ export class SupplierService {
         return this.repo.find({});
     }
 
-    getSupplierById(id: number) {
-        return this.repo.findOne(id);
+    async getSupplierById(id: number) {
+        let supplier = await this.repo.findOne(id);
+        if (!supplier){
+            console.log('service: supplier not found');
+            throw new NotFoundException('no such supplier id exists');
+        }
+        return supplier;
     }
 
     async addSupplier(supplier: Supplier) {
@@ -35,8 +40,7 @@ export class SupplierService {
         if (supplierToRemove) {
             await this.repo.remove(supplierToRemove);
             throw new HttpException('Supplier has been removed', 200);
-        } else {
-            throw new HttpException('Supplier name not found', 422);
         }
+        throw new HttpException('Supplier name not found', 422);
     }
 }

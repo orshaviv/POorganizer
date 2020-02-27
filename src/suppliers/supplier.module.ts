@@ -10,6 +10,7 @@ import {ContactService} from "../contacts/contact.service";
     imports: [TypeOrmModule.forFeature([Supplier,Contact])],
     controllers: [SupplierController],
     providers: [SupplierService, ContactService],
+    exports: [SupplierService],
 })
 
 export class SupplierModule {}

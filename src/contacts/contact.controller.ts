@@ -37,8 +37,8 @@ export class ContactController {
     }
 
     @Post('add')
-    async addNewContact(@Query('id') id: number, @Body() contactDTO: ContactDTO){
-        return await this.contactService.addContact(setNewContact(id,contactDTO));
+    async addNewContact(@Body() contactDTO: ContactDTO){
+        return await this.contactService.addContact(contactDTO);
     }
 
     @Get('remove')
