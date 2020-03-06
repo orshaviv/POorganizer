@@ -16,6 +16,7 @@ import {Contact} from "../contacts/contact.interface";
 import {setNewContact} from "../contacts/setNewContact";
 import {errorObject} from "rxjs/internal-compatibility";
 import {SupplierDTO} from "./supplier.dto";
+import {Error} from "@nestjs/core/errors/exceptions/runtime.exception";
 
 @Controller('suppliers')
 export class SupplierController {
@@ -33,10 +34,19 @@ export class SupplierController {
 
     @Get('id')
     async getById(@Query('id') id: number){
-        let supplier = await this.supplierService.getSupplierById(id).catch(err => {
-            console.log('controller: supplier not found');
-            return err;
+        let supplier = await this.supplierService.getSupplierById(id);
+
+        if (typeof supplier === 'undefined'){
+            console.log('supplier controller: supplier not found.');
+            throw new NotFoundException('supplier id not found');
+        }
+
+        /*
+            .catch(exception => {
+            console.log(`controller: supplier not found. Status code: ${exception.getStatus()}, msg: ${exception.getResponse().message}.`);
+            return exception.getResponse();
         });
+        */
         return supplier;
     }
 
@@ -55,6 +65,7 @@ export class SupplierController {
 
     @Post('addcontact')
     async addNewContact(@Body() contactDTO: ContactDTO){
-        return await this.contactService.addContact(contactDTO);
+        let contact = await this.contactService.addContact(contactDTO);
+        return contact;
     }
 }

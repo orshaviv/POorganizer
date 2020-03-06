@@ -1,4 +1,4 @@
-import {HttpException, Injectable, NotFoundException} from "@nestjs/common";
+import {HttpException, Injectable, NotAcceptableException, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Contact} from "./contact.interface";
 import {Repository} from "typeorm";
@@ -30,20 +30,17 @@ export class ContactService {
     }
 
     async addContact(contactDTO: ContactDTO) {
-        let supplier = await this.supplierService.getSupplierById(contactDTO.supplier_id).catch(err => {
-            return undefined;
-        });
-        if (!supplier){
-            throw new HttpException('Supplier is not valid', 404);
+        let supplier = await this.supplierService.getSupplierById(contactDTO.supplier_id);
+        if(!supplier){
+            throw new NotFoundException('Supplier id is not valid');
         }
 
         let contact = setNewContact(contactDTO);
         if (!contact) {
-            throw new HttpException('Contact is not valid', 404);
+            throw new NotAcceptableException('Contact is not valid');
         }
         await this.repo.save(contact);
-        throw new HttpException('Contact has been added', 200);
-
+        return contact;
         /*
         return this.supplierService.getSupplierById(contactDTO.supplier_id).then((supplier) => {
             if (!supplier){

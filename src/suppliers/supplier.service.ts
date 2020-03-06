@@ -20,8 +20,7 @@ export class SupplierService {
     async getSupplierById(id: number) {
         let supplier = await this.repo.findOne(id);
         if (!supplier){
-            console.log('service: supplier not found');
-            throw new NotFoundException('no such supplier id exists');
+            console.log('Supplier service: Supplier not found');
         }
         return supplier;
     }
