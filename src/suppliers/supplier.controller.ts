@@ -50,6 +50,18 @@ export class SupplierController {
         return supplier;
     }
 
+    @Get('name')
+    async getByName(@Query('name') name: string){
+        let supplier = await this.supplierService.getSupplierByName(name);
+
+        if (typeof supplier === 'undefined'){
+            console.log('supplier controller: supplier not found.');
+            throw new NotFoundException('supplier name not found');
+        }
+
+        return supplier;
+    }
+
     @Post('add')
     async addNewSupplier(@Body() supplierDTO: SupplierDTO){
         return await this.supplierService.addSupplier(supplierDTO);

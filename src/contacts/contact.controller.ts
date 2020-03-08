@@ -28,10 +28,19 @@ export class ContactController {
     }
 
     @Get('first')
-    async getById(@Query('name') name: string){
+    async getByFirstName(@Query('name') name: string){
         const result = await this.contactService.getContactByFirstName(name);
         if (!result){
             throw new NotFoundException('no such contact name exists');
+        }
+        return result;
+    }
+
+    @Get('supplierid')
+    async getBySupplierId(@Query('id') id: number){
+        const result = await this.contactService.getContactBySupId(id);
+        if (!result){
+            throw new NotFoundException('no such suppliers id exists');
         }
         return result;
     }

@@ -25,6 +25,14 @@ export class SupplierService {
         return supplier;
     }
 
+    async getSupplierByName(name: string) {
+        let supplier = await this.repo.findOne({supplier_name: name});
+        if (!supplier){
+            console.log('Supplier service: Supplier not found');
+        }
+        return supplier;
+    }
+
     async addSupplier(supplierDTO: SupplierDTO) {
         if (supplierDTO.name.length <= 45){
             let result = await this.repo.findOne({supplier_name: supplierDTO.name});
