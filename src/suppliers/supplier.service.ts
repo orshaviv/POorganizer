@@ -42,12 +42,11 @@ export class SupplierService {
         }else{
             throw new HttpException('Wrong input',422);
         }
-
         let supplier = new Supplier();
         supplier.supplier_name = supplierDTO.name;
 
-        await this.repo.save(supplier);
-        throw new HttpException('Supplier has been added', 200);
+        return await this.repo.save(supplier).then(res => res);
+        //throw new HttpException('Supplier has been added', 200);
     }
 
     async removeSupplier(name: string) {

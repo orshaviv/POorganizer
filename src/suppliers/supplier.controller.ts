@@ -72,7 +72,7 @@ export class SupplierController {
         if (name.length>45){
             throw new HttpException('Wrong input',422);
         }
-        return await this.supplierService.removeSupplier(name);
+        return await this.supplierService.removeSupplier(name).then(res => res);
     }
 
     @Post('addcontact')
