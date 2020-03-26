@@ -26,7 +26,7 @@ export class SupplierService {
     }
 
     async getSupplierByName(name: string) {
-        let supplier = await this.repo.findOne({supplier_name: name});
+        let supplier = await this.repo.findOne({supplierName: name});
         if (!supplier){
             console.log('Supplier service: Supplier not found');
         }
@@ -35,7 +35,7 @@ export class SupplierService {
 
     async addSupplier(supplierDTO: SupplierDTO) {
         if (supplierDTO.name.length <= 45){
-            let result = await this.repo.findOne({supplier_name: supplierDTO.name});
+            let result = await this.repo.findOne({supplierName: supplierDTO.name});
             if (result){
                 throw new HttpException('Supplier already exists', 422);
             }
@@ -43,14 +43,18 @@ export class SupplierService {
             throw new HttpException('Wrong input',422);
         }
         let supplier = new Supplier();
-        supplier.supplier_name = supplierDTO.name;
-
+        supplier.supplierName = supplierDTO.name;
+        supplier.country = supplierDTO.country;
+        supplier.city = supplierDTO.city;
+        supplier.streetAddress = supplierDTO.streetAddress;
+        supplier.classify = supplierDTO.classify;
+        supplier.notes = supplierDTO.notes;
+        
         return await this.repo.save(supplier).then(res => res);
-        //throw new HttpException('Supplier has been added', 200);
     }
 
     async removeSupplier(name: string) {
-        let supplierToRemove = await this.repo.findOne({supplier_name: name});
+        let supplierToRemove = await this.repo.findOne({supplierName: name});
 
         if (supplierToRemove) {
             await this.repo.remove(supplierToRemove);

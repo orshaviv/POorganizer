@@ -40,7 +40,6 @@ export class SupplierController {
             console.log('supplier controller: supplier not found.');
             throw new NotFoundException('supplier id not found');
         }
-
         /*
             .catch(exception => {
             console.log(`controller: supplier not found. Status code: ${exception.getStatus()}, msg: ${exception.getResponse().message}.`);

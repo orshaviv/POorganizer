@@ -6,5 +6,20 @@ export class Supplier {
     public id!: number;
 
     @Column({length: 45, unique: true})
-    public supplier_name!: string;
+    public supplierName!: string;
+
+    @Column({ unique: false})
+    public country!: string;
+
+    @Column({ unique: false})
+    public city!: string;
+
+    @Column({ unique: false})
+    public streetAddress!: string;
+
+    @Column({ unique: false})
+    public classify!: string;
+
+    @Column({ unique: false})
+    public notes!: string;
 }
