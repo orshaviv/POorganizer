@@ -1,25 +1,30 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm";
 
-@Entity({name: 'suppliers'})
+@Entity()
 export class Supplier {
     @PrimaryGeneratedColumn()
-    public id!: number;
+    public id: number;
 
     @Column({length: 45, unique: true})
-    public supplierName!: string;
+    public name: string;
 
     @Column({ unique: false})
-    public country!: string;
+    public country: string;
 
     @Column({ unique: false})
-    public city!: string;
+    public city: string;
 
     @Column({ unique: false})
-    public streetAddress!: string;
+    public streetAddress: string;
 
     @Column({ unique: false})
-    public classify!: string;
+    public type: string;
 
     @Column({ unique: false})
-    public notes!: string;
+    public notes: string;
+
+    /*
+    @Column({ default: 'true' })
+    isActive: string; // other options can be such as 'false', 'canceled'.
+     */
 }

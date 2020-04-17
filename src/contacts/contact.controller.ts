@@ -22,6 +22,7 @@ export class ContactController {
         return this.contactService.welcomeScreen();
     }
 
+    /*
     @Get('all')
     getAllContacts() {
         return this.contactService.getAllContacts();
@@ -54,4 +55,5 @@ export class ContactController {
     async removeContact(@Query('id') id: number) {
         return await this.contactService.removeContact(id);
     }
+    */
 }

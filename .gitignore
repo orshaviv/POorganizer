@@ -6,5 +6,8 @@ POorganizer Documentation/*
 
 #File extensions
 *.js
+*.exe
 
 #Files
+ormconfig.json
+ormconfig.js

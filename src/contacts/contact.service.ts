@@ -17,6 +17,7 @@ export class ContactService {
         return 'Welcome to contacts screen. For all contacts go to /contacts/all. ';
     }
 
+    /*
     async getAllContacts() {
         return await this.repo.find({});
     }
@@ -41,7 +42,7 @@ export class ContactService {
         }
         await this.repo.save(contact);
         return contact;
-        /*
+
         return this.supplierService.getSupplierById(contactDTO.supplier_id).then((supplier) => {
             if (!supplier){
                 throw new HttpException('Supplier id is not valid', 422);
@@ -55,7 +56,7 @@ export class ContactService {
                 throw new HttpException('Contact has been added', 200);
             }
         }).catch(res => res);
-        */
+
     }
 
     async removeContact(id: number) {
@@ -68,4 +69,5 @@ export class ContactService {
             throw new HttpException('Contact id not found', 404);
         }
     }
+    */
 }
