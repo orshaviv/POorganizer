@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {BadRequestException, Injectable} from "@nestjs/common";
 import {Supplier} from "./supplier.interface";
 import {Repository} from "typeorm";
 
@@ -20,15 +20,7 @@ export class SupplierService {
         return this.suppliersRepo.find();
     }
 
-    getSupplierById(id: number): Promise<Supplier> {
-        return this.suppliersRepo.findOne(id);
-    }
-
-    getSupplierByName(supplierName: string): Promise<Supplier> {
-        return this.suppliersRepo.findOne( {where: {name: supplierName} });
-    }
-
-    findSupplier(supplier: {name: string, id: number}): Promise<Supplier> {
+    findSupplier(supplier: SupplierDTO): Promise<Supplier> {
         return this.suppliersRepo.findOne( {
             where: [
                 {name: supplier.name},
@@ -38,18 +30,32 @@ export class SupplierService {
     }
 
     addSupplier(supplierDTO: SupplierDTO): Promise<Supplier> {
-        let supplier = new Supplier();
-        supplier.name = supplierDTO.name;
-        supplier.country = supplierDTO.country;
-        supplier.city = supplierDTO.city;
-        supplier.streetAddress = supplierDTO.streetAddress;
-        supplier.type = supplierDTO.type;
-        supplier.notes = supplierDTO.notes;
+        return this.findSupplier(supplierDTO).then(res => {
+            if (!res){
+                let supplier = new Supplier();
+                supplier.name = supplierDTO.name;
+                supplier.country = supplierDTO.country;
+                supplier.city = supplierDTO.city;
+                supplier.streetAddress = supplierDTO.streetAddress;
+                supplier.type = supplierDTO.type;
+                supplier.notes = supplierDTO.notes;
 
-        return this.suppliersRepo.save(supplier);
+                return this.suppliersRepo.save(supplier);
+            }
+            throw new BadRequestException('supplier with id or name already exist.');
+        }).catch(err => {
+            throw err;
+        });
     }
 
-    async removeSupplier(supplierToRemove: Supplier) {
-        return await this.suppliersRepo.remove(supplierToRemove);
+    removeSupplier(supplierDTO: SupplierDTO) {
+        return this.findSupplier(supplierDTO).then(supplierToRemove => {
+            if (!supplierToRemove){
+                throw new BadRequestException('supplier with id or name does not exist.');
+            }
+            return this.suppliersRepo.remove(supplierToRemove);
+        }).catch(err => {
+            throw err;
+        });
     }
 }

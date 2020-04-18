@@ -28,61 +28,41 @@ export class SupplierController {
         return this.supplierService.getAllSuppliers().then(res => {
             console.log('suppliers data fetched.');
             return res;
-        }).catch(err => {
-            console.log('Error fetching suppliers data: ' + err);
-            throw new ServiceUnavailableException({error: 'Cannot fetch suppliers data.'});
+        }).catch(() => {
+            throw new ServiceUnavailableException('Cannot fetch suppliers data.');
         });
     }
 
-    @Get('id')
-    getById(@Query('id') id: number){
-        return this.supplierService.getSupplierById(id).then(res => {
-            console.log('supplier data fetched by id.');
+    @Get('find')
+    getSupplier(@Body() supplierDTO: SupplierDTO){
+        return this.supplierService.findSupplier(supplierDTO).then(res => {
+            if (!res){
+                throw new BadRequestException('Supplier id or name does not exist.');
+            }
+            console.log('supplier data fetched by id or name.');
             return res;
         }).catch(err => {
-            console.log('Error fetching supplier by id: ' + err);
-            throw new ServiceUnavailableException({error: 'Cannot fetch supplier by id.'});
-        });
-    }
-
-    @Get('name')
-    getByName(@Body() supplier: {name: string}){
-        console.log(supplier.name);
-        return this.supplierService.getSupplierByName(supplier.name).then(res => {
-            console.log('Data fetched by name for supplier id ' + res.id + '.');
-            return res;
-        }).catch(err => {
-            console.log('Error fetching supplier by name: ' + err);
-            throw new ServiceUnavailableException({error: 'Cannot fetch supplier by name.'});
+            throw err;
         });
     }
 
     @Post('add')
     addNewSupplier(@Body() supplierDTO: SupplierDTO){
-        return this.supplierService.addSupplier(supplierDTO).then(supplier => {
-            console.log('Supplier ' + supplier.name + ' has been added.');
-            return supplier;
+        return this.supplierService.addSupplier(supplierDTO).then(newSupplier => {
+            console.log('Supplier ' + newSupplier.name + ' has been added.');
+            return newSupplier;
         }).catch(err => {
-            console.log('Error adding supplier: ' + err);
-            throw new BadRequestException();
+            throw err;
         });
     }
 
     @Delete('remove')
-    removeSupplierByName(@Body() supplierDTO: {name: string, id: number}){
-        return this.supplierService.findSupplier(supplierDTO).then(supplierToRemove => {
-            console.log('removing supplier id ' + supplierToRemove.id + '. ');
-
-            return this.supplierService.removeSupplier(supplierToRemove).then(res => {
-                console.log('Supplier ' + res.name + ' has been removed.');
-                return res;
-            }).catch(err => {
-                console.log('Error removing supplier: ' + err);
-                throw new BadRequestException();
-            });
+    removeSupplier(@Body() supplierDTO: SupplierDTO){
+        return this.supplierService.removeSupplier(supplierDTO).then(removedSupplier => {
+            console.log('Supplier ' + removedSupplier.name + ' has been removed.');
+            return removedSupplier;
         }).catch(err => {
-            console.log('Supplier not found: ' + err);
-            throw new ServiceUnavailableException({error: 'Supplier not found.'});
+            throw err;
         });
     }
 
