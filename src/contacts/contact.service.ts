@@ -10,8 +10,10 @@ import {Injector} from "@nestjs/core/injector/injector";
 
 @Injectable()
 export class ContactService {
-    constructor(@InjectRepository(Contact) private repo: Repository<Contact>, private supplierService: SupplierService) {
-    }
+    constructor(@InjectRepository(Contact)
+                private repo: Repository<Contact>,
+                private supplierService: SupplierService
+                ) {}
 
     welcomeScreen() {
         return 'Welcome to contacts screen. For all contacts go to /contacts/all. ';

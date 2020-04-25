@@ -15,7 +15,7 @@ import {SupplierDTO} from "./supplier.dto";
 export class SupplierController {
     constructor(
         private readonly supplierService: SupplierService,
-        // private readonly contactService: ContactService
+        //private readonly contactService: ContactService
     ) {}
 
     @Get()
@@ -73,5 +73,4 @@ export class SupplierController {
         return contact;
     }
     */
-
 }
