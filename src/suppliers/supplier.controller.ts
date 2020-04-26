@@ -2,7 +2,7 @@ import {
     Body,
     Controller,
     Get,
-    Post, Delete, ValidationPipe, UsePipes, BadRequestException
+    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
@@ -18,12 +18,8 @@ export class SupplierController {
     ) {}
 
     @Get()
-    getAllSuppliers(@Body(ValidationPipe) filterDto: GetSuppliersFilterDto): Promise<Supplier[]> {
-        if (Object.keys(filterDto).length){
-            return this.supplierService.getSuppliers(filterDto);
-        }else{
-            return this.supplierService.getAllSuppliers();
-        }
+    getSuppliers(@Body(ValidationPipe) filterDto: GetSuppliersFilterDto): Promise<Supplier[]> {
+        return this.supplierService.getSuppliers(filterDto);
     }
 
     @Get('id')
@@ -51,6 +47,14 @@ export class SupplierController {
             throw new BadRequestException('Specify only ID or name of supplier.');
         }
         return this.supplierService.removeSupplier(filterDto);
+    }
+
+    @Patch('/:id/update')
+    updateSupplier(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() supplierDto: SupplierDTO
+    ): Promise<Supplier> {
+        return this.supplierService.updateSupplier(id,supplierDto);
     }
 
     /*

@@ -1,7 +1,7 @@
-import {Entity, Column, PrimaryGeneratedColumn} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, BaseEntity} from "typeorm";
 
 @Entity()
-export class Supplier {
+export class Supplier extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
@@ -22,9 +22,4 @@ export class Supplier {
 
     @Column({ nullable: true, unique: false})
     public notes: string;
-
-    /*
-    @Column({ default: 'true' })
-    isActive: string; // other options can be such as 'false', 'canceled'.
-     */
 }

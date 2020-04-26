@@ -9,5 +9,4 @@ POorganizer Documentation/*
 *.exe
 
 #Files
-ormconfig.json
-ormconfig.js
+src/config/typeorm.config.ts

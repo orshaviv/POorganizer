@@ -5,38 +5,17 @@ import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
+import {SupplierRepository} from "./supplier.repository";
 
 @Injectable()
 export class SupplierService {
     constructor(
-        @InjectRepository(Supplier)
-        private suppliersRepo: Repository<Supplier>,
+        @InjectRepository(SupplierRepository)
+        private suppliersRepo: SupplierRepository,
     ) {}
 
-    getAllSuppliers(): Promise<Supplier[]> {
-        return this.suppliersRepo.find();
-    }
-
-    async getSuppliers(filterDto: GetSuppliersFilterDto): Promise<Supplier[]> {
-        const {id, search} = filterDto;
-
-        let suppliers = await this.getAllSuppliers();
-
-        //id is unique -> results with only one supplier!
-        if (id){
-            suppliers = [suppliers.find(supplier => supplier.id.toString() === id)];
-        }
-
-        if (search){
-            suppliers = suppliers.filter(supplier =>
-                supplier.name.toUpperCase().includes(search.toUpperCase()) ||
-                supplier.country.toUpperCase().includes(search.toUpperCase()) ||
-                supplier.city.toUpperCase().includes(search.toUpperCase()) ||
-                supplier.type.toUpperCase().includes(search.toUpperCase())
-            );
-        }
-
-        return suppliers;
+    getSuppliers(filterDto?: GetSuppliersFilterDto): Promise<Supplier[]> {
+        return this.suppliersRepo.getSuppliers(filterDto);
     }
 
     async getSupplierById(id: string): Promise<Supplier> {
@@ -58,30 +37,55 @@ export class SupplierService {
         return supplier;
     }
 
-    async addNewSupplier(supplierDto: SupplierDTO): Promise<Supplier> {
-        let suppliers = await this.getAllSuppliers();
-        if (suppliers && suppliers.find(supplier => supplier.name === supplierDto.name)){
-            throw new NotAcceptableException(`Supplier named "${supplierDto.name}" already exists.`);
-        }
-
-        let supplier = new Supplier();
-        supplier.name = supplierDto.name;
-        supplier.country = !supplierDto.country? null : supplierDto.country;
-        supplier.city = !supplierDto.city? null : supplierDto.city;
-        supplier.streetAddress = !supplierDto.streetAddress? null : supplierDto.streetAddress;
-        supplier.type = !supplierDto.type? null : supplierDto.type;
-        supplier.notes = !supplierDto.notes? null : supplierDto.notes;
-
-        return await this.suppliersRepo.save(supplier);
+    addNewSupplier(supplierDto: SupplierDTO): Promise<Supplier> {
+        return this.suppliersRepo.addNewSupplier(supplierDto);
     }
 
-    async removeSupplier(filterDto: GetSuppliersFilterDto) {
-        let supplierToRemove: Supplier;
-        if (filterDto.id) {
-            supplierToRemove = await this.getSupplierById(filterDto.id);
+    async removeSupplier(filterDto: GetSuppliersFilterDto): Promise<any> {
+        const { id, search } = filterDto;
+        if (id) {
+            const res = await this.suppliersRepo.delete(id);
+            if (res.affected === 0){
+                throw new NotFoundException(`Supplier with ID "${id}" not found.`);
+            }
         }else{
-            supplierToRemove = await this.getSupplierByName(filterDto.search);
+            const res = await this.suppliersRepo.delete({name: search} );
+            if (res.affected === 0){
+                throw new NotFoundException(`Supplier named "${search}" not found.`);
+            }
         }
-        return await this.suppliersRepo.remove(supplierToRemove);
+        return 'Supplier deleted.';
+    }
+
+    async updateSupplier(id: number, supplierDto: SupplierDTO): Promise<Supplier>{
+        const supplier = await this.getSupplierById(id.toString());
+
+        const {name, country, city, streetAddress, type, notes} = supplierDto;
+
+        if (typeof name !== undefined){
+            const exists = !!(await this.suppliersRepo.findOne({name}));
+            if(exists){
+                throw new NotAcceptableException(`Supplier named "${supplierDto.name}" already exists.`);
+            }
+            supplier.name = name;
+        }
+        if (typeof country !== undefined){
+            supplier.country = country;
+        }
+        if (typeof city !== undefined){
+            supplier.city = city;
+        }
+        if (typeof streetAddress !== undefined){
+            supplier.streetAddress = streetAddress;
+        }
+        if (typeof type !== undefined){
+            supplier.type = type;
+        }
+        if (typeof notes !== undefined){
+            supplier.notes = notes;
+        }
+
+        await supplier.save();
+        return supplier;
     }
 }
