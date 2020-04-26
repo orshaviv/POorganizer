@@ -8,19 +8,19 @@ export class Supplier {
     @Column({length: 45, unique: true})
     public name: string;
 
-    @Column({ unique: false})
+    @Column({ nullable: true, unique: false})
     public country: string;
 
-    @Column({ unique: false})
+    @Column({ nullable: true, unique: false})
     public city: string;
 
-    @Column({ unique: false})
+    @Column({ nullable: true, unique: false})
     public streetAddress: string;
 
-    @Column({ unique: false})
+    @Column({ nullable: true, unique: false})
     public type: string;
 
-    @Column({ unique: false})
+    @Column({ nullable: true, unique: false})
     public notes: string;
 
     /*

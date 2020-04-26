@@ -1,14 +1,13 @@
 import {
     Body,
     Controller,
-    Query,
-    HttpException,
-    NotFoundException,
     Get,
-    Post, ServiceUnavailableException, BadRequestException, Put, Delete
+    Post, Delete, ValidationPipe, UsePipes, BadRequestException
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
-import {SupplierDTO} from "./supplier.dto";
+import {SupplierDTO} from "./dto/supplier.dto";
+import {Supplier} from "./supplier.interface";
+import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 
 @Controller('suppliers')
 
@@ -19,51 +18,39 @@ export class SupplierController {
     ) {}
 
     @Get()
-    welcomeScreen(){
-        return this.supplierService.welcomeScreen();
+    getAllSuppliers(@Body(ValidationPipe) filterDto: GetSuppliersFilterDto): Promise<Supplier[]> {
+        if (Object.keys(filterDto).length){
+            return this.supplierService.getSuppliers(filterDto);
+        }else{
+            return this.supplierService.getAllSuppliers();
+        }
     }
 
-    @Get('all')
-    getAllSuppliers() {
-        return this.supplierService.getAllSuppliers().then(res => {
-            console.log('suppliers data fetched.');
-            return res;
-        }).catch(() => {
-            throw new ServiceUnavailableException('Cannot fetch suppliers data.');
-        });
+    @Get('id')
+    getSupplierById(@Body() search: {id: string}){
+        let {id} = search;
+        return this.supplierService.getSupplierById(id);
     }
 
-    @Get('find')
-    getSupplier(@Body() supplierDTO: SupplierDTO){
-        return this.supplierService.findSupplier(supplierDTO).then(res => {
-            if (!res){
-                throw new BadRequestException('Supplier id or name does not exist.');
-            }
-            console.log('supplier data fetched by id or name.');
-            return res;
-        }).catch(err => {
-            throw err;
-        });
+    @Get('name')
+    getSupplierByName(@Body() search: {name: string} ){
+        let {name} = search;
+        return this.supplierService.getSupplierByName(name);
     }
 
     @Post('add')
-    addNewSupplier(@Body() supplierDTO: SupplierDTO){
-        return this.supplierService.addSupplier(supplierDTO).then(newSupplier => {
-            console.log('Supplier ' + newSupplier.name + ' has been added.');
-            return newSupplier;
-        }).catch(err => {
-            throw err;
-        });
+    @UsePipes(ValidationPipe)
+    addNewSupplier(@Body() supplierDTO: SupplierDTO): Promise<Supplier> {
+        return this.supplierService.addNewSupplier(supplierDTO);
     }
 
     @Delete('remove')
-    removeSupplier(@Body() supplierDTO: SupplierDTO){
-        return this.supplierService.removeSupplier(supplierDTO).then(removedSupplier => {
-            console.log('Supplier ' + removedSupplier.name + ' has been removed.');
-            return removedSupplier;
-        }).catch(err => {
-            throw err;
-        });
+    @UsePipes(ValidationPipe)
+    removeSupplier(@Body() filterDto: GetSuppliersFilterDto): Promise<Supplier> {
+        if (filterDto.id !== undefined && filterDto.search !== undefined){
+            throw new BadRequestException('Specify only ID or name of supplier.');
+        }
+        return this.supplierService.removeSupplier(filterDto);
     }
 
     /*
