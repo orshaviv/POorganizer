@@ -4,7 +4,7 @@ import {Contact} from "./contact.interface";
 import {ContactController} from "./contact.controller";
 import {ContactService} from "./contact.service";
 import {SupplierService} from "../suppliers/supplier.service";
-import {Supplier} from "../suppliers/supplier.interface";
+import {Supplier} from "../suppliers/supplier.entity";
 
 @Module({
     imports: [TypeOrmModule.forFeature([Contact, Supplier])],

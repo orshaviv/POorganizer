@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
-import {Supplier} from "./supplier.interface";
+import {Supplier} from "./supplier.entity";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 
 @Controller('suppliers')
@@ -23,8 +23,8 @@ export class SupplierController {
     }
 
     @Get('id')
-    getSupplierById(@Body() search: {id: string}){
-        let {id} = search;
+    getSupplierById(@Body() search: {id: number}){
+        let { id } = search;
         return this.supplierService.getSupplierById(id);
     }
 
@@ -49,12 +49,9 @@ export class SupplierController {
         return this.supplierService.removeSupplier(filterDto);
     }
 
-    @Patch('/:id/update')
-    updateSupplier(
-        @Param('id', ParseIntPipe) id: number,
-        @Body() supplierDto: SupplierDTO
-    ): Promise<Supplier> {
-        return this.supplierService.updateSupplier(id,supplierDto);
+    @Patch('/update')
+    updateSupplier(@Body() supplierDto: SupplierDTO): Promise<Supplier> {
+        return this.supplierService.updateSupplier(supplierDto);
     }
 
     /*

@@ -1,5 +1,5 @@
 import {BadRequestException, Injectable, NotAcceptableException, NotFoundException} from "@nestjs/common";
-import {Supplier} from "./supplier.interface";
+import {Supplier} from "./supplier.entity";
 import {Repository} from "typeorm";
 
 import {InjectRepository} from "@nestjs/typeorm";
@@ -18,9 +18,8 @@ export class SupplierService {
         return this.suppliersRepo.getSuppliers(filterDto);
     }
 
-    async getSupplierById(id: string): Promise<Supplier> {
-        const idNum = parseInt(id,10);
-        let supplier = await this.suppliersRepo.findOne({ id: idNum });
+    async getSupplierById(id: number): Promise<Supplier> {
+        let supplier = await this.suppliersRepo.findOne({ id });
 
         if (!supplier){
             throw new NotFoundException(`Supplier with ID "${id}" not found.`);
@@ -29,7 +28,7 @@ export class SupplierService {
     }
 
     async getSupplierByName(name: string): Promise<Supplier> {
-        let supplier = await this.suppliersRepo.findOne({name});
+        let supplier = await this.suppliersRepo.findOne({ name });
 
         if (!supplier){
             throw new NotFoundException(`Supplier named "${name}" not found.`);
@@ -57,35 +56,7 @@ export class SupplierService {
         return 'Supplier deleted.';
     }
 
-    async updateSupplier(id: number, supplierDto: SupplierDTO): Promise<Supplier>{
-        const supplier = await this.getSupplierById(id.toString());
-
-        const {name, country, city, streetAddress, type, notes} = supplierDto;
-
-        if (typeof name !== undefined){
-            const exists = !!(await this.suppliersRepo.findOne({name}));
-            if(exists){
-                throw new NotAcceptableException(`Supplier named "${supplierDto.name}" already exists.`);
-            }
-            supplier.name = name;
-        }
-        if (typeof country !== undefined){
-            supplier.country = country;
-        }
-        if (typeof city !== undefined){
-            supplier.city = city;
-        }
-        if (typeof streetAddress !== undefined){
-            supplier.streetAddress = streetAddress;
-        }
-        if (typeof type !== undefined){
-            supplier.type = type;
-        }
-        if (typeof notes !== undefined){
-            supplier.notes = notes;
-        }
-
-        await supplier.save();
-        return supplier;
+    updateSupplier(supplierDto: SupplierDTO): Promise<Supplier>{
+        return this.suppliersRepo.updateSupplier(supplierDto);
     }
 }

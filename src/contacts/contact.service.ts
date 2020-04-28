@@ -4,7 +4,7 @@ import {Contact} from "./contact.interface";
 import {Repository} from "typeorm";
 import {ContactDTO} from "./contact.dto";
 import {setNewContact} from "./setNewContact";
-import {Supplier} from "../suppliers/supplier.interface";
+import {Supplier} from "../suppliers/supplier.entity";
 import {SupplierService} from "../suppliers/supplier.service";
 import {Injector} from "@nestjs/core/injector/injector";
 

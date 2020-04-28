@@ -3,11 +3,13 @@ import {SupplierModule} from "../suppliers/supplier.module";
 import {TypeOrmModule} from "@nestjs/typeorm";
 import {Connection} from "typeorm";
 import {typeOrmConfig} from "../config/typeorm.config";
+import {AuthModule} from "../auth/auth.module";
 
 @Module({
     imports: [
         TypeOrmModule.forRoot(typeOrmConfig),
-        SupplierModule
+        SupplierModule,
+        AuthModule,
     ],
     controllers: [],
     providers: [],

@@ -1,6 +1,9 @@
 import {IsNotEmpty, IsOptional} from "class-validator";
 
 export class SupplierDTO{
+    @IsOptional()
+    public id: number;
+
     @IsNotEmpty()
     public name: string;
 
