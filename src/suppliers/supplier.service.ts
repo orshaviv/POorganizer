@@ -6,6 +6,7 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierRepository} from "./supplier.repository";
+import {User} from "../auth/user.entity";
 
 @Injectable()
 export class SupplierService {
@@ -14,12 +15,18 @@ export class SupplierService {
         private suppliersRepo: SupplierRepository,
     ) {}
 
-    getSuppliers(filterDto?: GetSuppliersFilterDto): Promise<Supplier[]> {
-        return this.suppliersRepo.getSuppliers(filterDto);
+    getSuppliers(
+        filterDto: GetSuppliersFilterDto,
+        user: User
+    ): Promise<Supplier[]> {
+        return this.suppliersRepo.getSuppliers(filterDto, user);
     }
 
-    async getSupplierById(id: number): Promise<Supplier> {
-        let supplier = await this.suppliersRepo.findOne({ id });
+    async getSupplierById(
+        id: number,
+        user: User,
+        ): Promise<Supplier> {
+        let supplier = await this.suppliersRepo.findOne({where: { id, userId: user.id }} );
 
         if (!supplier){
             throw new NotFoundException(`Supplier with ID "${id}" not found.`);
@@ -36,19 +43,25 @@ export class SupplierService {
         return supplier;
     }
 
-    addNewSupplier(supplierDto: SupplierDTO): Promise<Supplier> {
-        return this.suppliersRepo.addNewSupplier(supplierDto);
+    addNewSupplier(
+        supplierDto: SupplierDTO,
+        user: User
+    ): Promise<Supplier> {
+        return this.suppliersRepo.addNewSupplier(supplierDto, user);
     }
 
-    async removeSupplier(filterDto: GetSuppliersFilterDto): Promise<any> {
+    async removeSupplier(
+        filterDto: GetSuppliersFilterDto,
+        user: User,
+    ): Promise<any> {
         const { id, search } = filterDto;
         if (id) {
-            const res = await this.suppliersRepo.delete(id);
+            const res = await this.suppliersRepo.delete({id, userId: user.id});
             if (res.affected === 0){
                 throw new NotFoundException(`Supplier with ID "${id}" not found.`);
             }
         }else{
-            const res = await this.suppliersRepo.delete({name: search} );
+            const res = await this.suppliersRepo.delete({name: search, userId: user.id} );
             if (res.affected === 0){
                 throw new NotFoundException(`Supplier named "${search}" not found.`);
             }
@@ -56,7 +69,10 @@ export class SupplierService {
         return 'Supplier deleted.';
     }
 
-    updateSupplier(supplierDto: SupplierDTO): Promise<Supplier>{
-        return this.suppliersRepo.updateSupplier(supplierDto);
+    updateSupplier(
+        supplierDto: SupplierDTO,
+        user: User,
+    ): Promise<Supplier>{
+        return this.suppliersRepo.updateSupplier(supplierDto, user);
     }
 }

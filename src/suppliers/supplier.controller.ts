@@ -2,15 +2,18 @@ import {
     Body,
     Controller,
     Get,
-    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe
+    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe, UseGuards
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {Supplier} from "./supplier.entity";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
+import {AuthGuard} from "@nestjs/passport";
+import {GetUser} from "../auth/get-user.decorator";
+import {User} from "../auth/user.entity";
 
 @Controller('suppliers')
-
+@UseGuards(AuthGuard())
 export class SupplierController {
     constructor(
         private readonly supplierService: SupplierService,
@@ -18,14 +21,20 @@ export class SupplierController {
     ) {}
 
     @Get()
-    getSuppliers(@Body(ValidationPipe) filterDto: GetSuppliersFilterDto): Promise<Supplier[]> {
-        return this.supplierService.getSuppliers(filterDto);
+    getSuppliers(
+        @Body(ValidationPipe) filterDto: GetSuppliersFilterDto,
+        @GetUser() user: User,
+    ): Promise<Supplier[]> {
+        return this.supplierService.getSuppliers(filterDto, user);
     }
 
     @Get('id')
-    getSupplierById(@Body() search: {id: number}){
+    getSupplierById(
+        @Body() search: {id: number},
+        @GetUser() user: User,
+    ): Promise<Supplier> {
         let { id } = search;
-        return this.supplierService.getSupplierById(id);
+        return this.supplierService.getSupplierById(id, user);
     }
 
     @Get('name')
@@ -36,22 +45,31 @@ export class SupplierController {
 
     @Post('add')
     @UsePipes(ValidationPipe)
-    addNewSupplier(@Body() supplierDTO: SupplierDTO): Promise<Supplier> {
-        return this.supplierService.addNewSupplier(supplierDTO);
+    addNewSupplier(
+        @Body() supplierDTO: SupplierDTO,
+        @GetUser() user: User,
+    ): Promise<Supplier> {
+        return this.supplierService.addNewSupplier(supplierDTO, user);
     }
 
     @Delete('remove')
     @UsePipes(ValidationPipe)
-    removeSupplier(@Body() filterDto: GetSuppliersFilterDto): Promise<Supplier> {
+    removeSupplier(
+        @Body() filterDto: GetSuppliersFilterDto,
+        @GetUser() user: User,
+        ): Promise<Supplier> {
         if (filterDto.id !== undefined && filterDto.search !== undefined){
             throw new BadRequestException('Specify only ID or name of supplier.');
         }
-        return this.supplierService.removeSupplier(filterDto);
+        return this.supplierService.removeSupplier(filterDto, user);
     }
 
     @Patch('/update')
-    updateSupplier(@Body() supplierDto: SupplierDTO): Promise<Supplier> {
-        return this.supplierService.updateSupplier(supplierDto);
+    updateSupplier(
+        @Body() supplierDto: SupplierDTO,
+        @GetUser() user: User,
+    ): Promise<Supplier> {
+        return this.supplierService.updateSupplier(supplierDto, user);
     }
 
     /*

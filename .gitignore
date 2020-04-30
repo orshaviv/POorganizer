@@ -10,3 +10,4 @@ POorganizer Documentation/*
 
 #Files
 src/config/typeorm.config.ts
+src/auth/jwt.strategy.ts
