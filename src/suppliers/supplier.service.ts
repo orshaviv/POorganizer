@@ -7,12 +7,16 @@ import {SupplierDTO} from "./dto/supplier.dto";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierRepository} from "./supplier.repository";
 import {User} from "../auth/user.entity";
+import {SupplierTypeRepository} from "./supplier-type.repository";
+import {SupplierType} from "./supplier-type.entity";
 
 @Injectable()
 export class SupplierService {
     constructor(
         @InjectRepository(SupplierRepository)
         private suppliersRepo: SupplierRepository,
+        @InjectRepository(SupplierTypeRepository)
+        private supplierTypeRepository: SupplierTypeRepository,
     ) {}
 
     getSuppliers(
@@ -43,11 +47,16 @@ export class SupplierService {
         return supplier;
     }
 
-    addNewSupplier(
+    async addNewSupplier(
         supplierDto: SupplierDTO,
         user: User
     ): Promise<Supplier> {
-        return this.suppliersRepo.addNewSupplier(supplierDto, user);
+
+        let supplierType: SupplierType = null;
+        if(supplierDto.type){
+            supplierType = await this.supplierTypeRepository.createOrUpdateSupplierType(supplierDto.type);
+        }
+        return await this.suppliersRepo.addNewSupplier(supplierDto, supplierType, user);
     }
 
     async removeSupplier(
@@ -69,10 +78,14 @@ export class SupplierService {
         return 'Supplier deleted.';
     }
 
-    updateSupplier(
+    async updateSupplier(
         supplierDto: SupplierDTO,
         user: User,
     ): Promise<Supplier>{
-        return this.suppliersRepo.updateSupplier(supplierDto, user);
+        let supplierType: SupplierType = null;
+        if(supplierDto.type){
+            supplierType = await this.supplierTypeRepository.createOrUpdateSupplierType(supplierDto.type);
+        }
+        return await this.suppliersRepo.updateSupplier(supplierDto, supplierType, user);
     }
 }

@@ -4,6 +4,10 @@ import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {ConflictException, NotAcceptableException, NotFoundException} from "@nestjs/common";
 import {User} from "../auth/user.entity";
+import {SupplierType} from "./supplier-type.entity";
+import {InjectRepository} from "@nestjs/typeorm";
+import {UserRepository} from "../auth/user.repository";
+import {SupplierTypeRepository} from "./supplier-type.repository";
 
 @EntityRepository(Supplier)
 export class SupplierRepository extends Repository<Supplier> {
@@ -37,14 +41,16 @@ export class SupplierRepository extends Repository<Supplier> {
 
     async addNewSupplier(
         supplierDto: SupplierDTO,
+        supplierType: SupplierType,
         user: User
     ): Promise<Supplier> {
         let supplier = new Supplier();
+
         supplier.name = supplierDto.name;
         supplier.country = !supplierDto.country? null : supplierDto.country;
         supplier.city = !supplierDto.city? null : supplierDto.city;
         supplier.streetAddress = !supplierDto.streetAddress? null : supplierDto.streetAddress;
-        supplier.type = !supplierDto.type? null : supplierDto.type;
+        supplier.type = !supplierType? null : supplierType;
         supplier.notes = !supplierDto.notes? null : supplierDto.notes;
 
         supplier.user = user;
@@ -62,6 +68,7 @@ export class SupplierRepository extends Repository<Supplier> {
 
     async updateSupplier(
         supplierDto: SupplierDTO,
+        supplierType: SupplierType,
         user: User
     ): Promise<Supplier> {
         const {id, name, country, city, streetAddress, type, notes} = supplierDto;
@@ -91,8 +98,8 @@ export class SupplierRepository extends Repository<Supplier> {
         if (streetAddress){
             supplier.streetAddress = streetAddress;
         }
-        if (type){
-            supplier.type = type;
+        if (supplierType){
+            supplier.type = supplierType;
         }
         if (notes){
             supplier.notes = notes;
@@ -103,4 +110,5 @@ export class SupplierRepository extends Repository<Supplier> {
         delete supplier.user;
         return supplier;
     }
+
 }
