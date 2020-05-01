@@ -11,6 +11,11 @@ import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {AuthGuard} from "@nestjs/passport";
 import {GetUser} from "../auth/get-user.decorator";
 import {User} from "../auth/user.entity";
+import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
+import {IsNotEmpty} from "class-validator";
+
+class SupplierTypes {
+}
 
 @Controller('suppliers')
 @UseGuards(AuthGuard())
@@ -29,17 +34,18 @@ export class SupplierController {
     }
 
     @Get('id')
+
     getSupplierById(
-        @Body() search: {id: number},
+        @Body('id', ParseIntPipe) id: number,
         @GetUser() user: User,
     ): Promise<Supplier> {
-        let { id } = search;
         return this.supplierService.getSupplierById(id, user);
     }
 
     @Get('name')
-    getSupplierByName(@Body() search: {name: string} ){
-        let {name} = search;
+    getSupplierByName(
+        @Body('name') name: string,
+    ): Promise<Supplier> {
         return this.supplierService.getSupplierByName(name);
     }
 
@@ -57,7 +63,7 @@ export class SupplierController {
     removeSupplier(
         @Body() filterDto: GetSuppliersFilterDto,
         @GetUser() user: User,
-        ): Promise<Supplier> {
+    ): Promise<Supplier> {
         if (filterDto.id !== undefined && filterDto.search !== undefined){
             throw new BadRequestException('Specify only ID or name of supplier.');
         }
@@ -65,11 +71,20 @@ export class SupplierController {
     }
 
     @Patch('/update')
+    @UsePipes(ValidationPipe)
     updateSupplier(
         @Body() supplierDto: SupplierDTO,
         @GetUser() user: User,
     ): Promise<Supplier> {
         return this.supplierService.updateSupplier(supplierDto, user);
+    }
+
+    @Get('suppliertypes')
+    @UsePipes(ValidationPipe)
+    findTypes(
+        @Body() getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
+    ): Promise<SupplierTypes[]> {
+        return this.supplierService.findTypes(getSuppliersTypesFilterDto);
     }
 
     /*

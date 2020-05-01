@@ -16,7 +16,7 @@ export class SupplierRepository extends Repository<Supplier> {
         user: User
     ): Promise<Supplier[]> {
         const {id, search} = filterDto;
-        const query = this.createQueryBuilder('supplier');
+        const query = this.createQueryBuilder('supplier').leftJoinAndSelect('supplier.type','type');
 
         query.where('supplier.userId = :userId', { userId: user.id })
 

@@ -1,5 +1,6 @@
 import {EntityRepository, Repository} from "typeorm";
 import {SupplierType} from "./supplier-type.entity";
+import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
 
 @EntityRepository(SupplierType)
 export class SupplierTypeRepository extends Repository<SupplierType> {
@@ -16,5 +17,25 @@ export class SupplierTypeRepository extends Repository<SupplierType> {
         }
 
         return supplierType;
+    }
+
+    async getTypes(
+        getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
+    ): Promise<SupplierType[]> {
+        const {id, search} = getSuppliersTypesFilterDto;
+
+        const query = this.createQueryBuilder('supplier_type');
+
+        if (id) {
+            query.andWhere('(supplier_type.id = :id)', {id});
+
+            //return await this.find({id});
+        } else if (search) {
+            query.andWhere(
+                '(supplier_type.type LIKE :search)', {search: `%${search}%`}
+            );
+        }
+
+        return await query.getMany();
     }
 }

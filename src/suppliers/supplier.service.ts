@@ -9,6 +9,7 @@ import {SupplierRepository} from "./supplier.repository";
 import {User} from "../auth/user.entity";
 import {SupplierTypeRepository} from "./supplier-type.repository";
 import {SupplierType} from "./supplier-type.entity";
+import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
 
 @Injectable()
 export class SupplierService {
@@ -30,7 +31,12 @@ export class SupplierService {
         id: number,
         user: User,
         ): Promise<Supplier> {
-        let supplier = await this.suppliersRepo.findOne({where: { id, userId: user.id }} );
+
+        const query = await this.suppliersRepo.createQueryBuilder('supplier')
+            .leftJoinAndSelect('supplier.type','type')
+            .where('supplier.id = :id', { id });
+
+        const supplier = query.getOne();
 
         if (!supplier){
             throw new NotFoundException(`Supplier with ID "${id}" not found.`);
@@ -39,7 +45,12 @@ export class SupplierService {
     }
 
     async getSupplierByName(name: string): Promise<Supplier> {
-        let supplier = await this.suppliersRepo.findOne({ name });
+
+        const query = await this.suppliersRepo.createQueryBuilder('supplier')
+            .leftJoinAndSelect('supplier.type','type')
+            .where('supplier.name = :name', {name});
+
+        const supplier = query.getOne();
 
         if (!supplier){
             throw new NotFoundException(`Supplier named "${name}" not found.`);
@@ -87,5 +98,11 @@ export class SupplierService {
             supplierType = await this.supplierTypeRepository.createOrUpdateSupplierType(supplierDto.type);
         }
         return await this.suppliersRepo.updateSupplier(supplierDto, supplierType, user);
+    }
+
+    findTypes(
+        getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
+        ): Promise<SupplierType[]> {
+        return this.supplierTypeRepository.getTypes(getSuppliersTypesFilterDto);
     }
 }
