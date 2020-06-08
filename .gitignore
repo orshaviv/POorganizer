@@ -10,5 +10,3 @@ config/*
 *.exe
 
 #Files
-src/config/typeorm.config.ts
-src/auth/jwt.strategy.ts
