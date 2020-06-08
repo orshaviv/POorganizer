@@ -10,10 +10,8 @@ export class SupplierTypeRepository extends Repository<SupplierType> {
 
         try{
             await supplierType.save();
-            console.log('New Supplier type Added.');
         } catch {
             supplierType = await this.findOne({type});
-            console.log('Supplier type already exists.');
         }
 
         return supplierType;

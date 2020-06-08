@@ -3,6 +3,7 @@ node_modules/*
 dist/*
 POorganizer Documentation/*
 .idea/*
+config/*
 
 #File extensions
 *.js

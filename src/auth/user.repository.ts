@@ -3,12 +3,14 @@ import {User} from "./user.entity";
 import {AuthCredentialsDto} from "./dto/auth-credentials.dto";
 import {ConflictException, InternalServerErrorException} from "@nestjs/common";
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-    async signUp(authCredentialDto: AuthCredentialsDto): Promise<void> {
+    async signUp(authCredentialDto: AuthCredentialsDto):
+        Promise<void>
+    {
         const {username, password, email, firstName, lastName} = authCredentialDto;
 
         const user = new User();
@@ -34,17 +36,20 @@ export class UserRepository extends Repository<User> {
     }
 
     async validateUserPassword(authCredentialsDto: AuthCredentialsDto):
-        Promise<{ username: string,
+        Promise<{
+            username: string,
             email: string,
             firstName: string,
             lastName: string
-        }> {
+        }>
+    {
 
         const {username, password} = authCredentialsDto;
         const user = await this.findOne({ username });
 
         if (user && await user.validatePassword(password)) {
-            return { username: user.username,
+            return {
+                username: user.username,
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName
@@ -54,7 +59,9 @@ export class UserRepository extends Repository<User> {
         }
     }
 
-    private async hashPassword(password: string, salt: string): Promise<string> {
+    private async hashPassword(password: string, salt: string):
+        Promise<string>
+    {
         return bcrypt.hash(password, salt);
     }
 }

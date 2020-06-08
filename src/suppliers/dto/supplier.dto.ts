@@ -1,7 +1,8 @@
-import {IsNotEmpty, IsOptional} from "class-validator";
+import {IsNotEmpty, IsNumber, IsOptional} from "class-validator";
 
 export class SupplierDTO{
     @IsOptional()
+    @IsNotEmpty()
     public id: number;
 
     @IsNotEmpty()
@@ -26,4 +27,5 @@ export class SupplierDTO{
     @IsOptional()
     @IsNotEmpty()
     public notes: string;
+
 }

@@ -1,16 +1,22 @@
-import {EntityRepository, Repository} from "typeorm";
+import {EntityRepository, Not, Repository} from "typeorm";
 import {Supplier} from "./supplier.entity";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierDTO} from "./dto/supplier.dto";
-import {ConflictException, NotAcceptableException, NotFoundException} from "@nestjs/common";
+import {
+    ConflictException,
+    InternalServerErrorException,
+    Logger,
+    NotAcceptableException,
+    NotFoundException
+} from "@nestjs/common";
 import {User} from "../auth/user.entity";
 import {SupplierType} from "./supplier-type.entity";
-import {InjectRepository} from "@nestjs/typeorm";
-import {UserRepository} from "../auth/user.repository";
-import {SupplierTypeRepository} from "./supplier-type.repository";
+import {filter} from "rxjs/operators";
 
 @EntityRepository(Supplier)
 export class SupplierRepository extends Repository<Supplier> {
+    private logger = new Logger('SupplierRepository');
+
     async getSuppliers(
         filterDto: GetSuppliersFilterDto,
         user: User
@@ -35,8 +41,13 @@ export class SupplierRepository extends Repository<Supplier> {
                     );
         }
 
-        const suppliers = await query.getMany();
-        return suppliers;
+        try {
+            const suppliers = await query.getMany();
+            return suppliers;
+        } catch (error) {
+            this.logger.error(`Failed to get suppliers for user ${user.firstName} ${user.lastName}. Filters: ${JSON.stringify(filterDto)}`, error.stack);
+            throw new InternalServerErrorException();
+        }
     }
 
     async addNewSupplier(
@@ -57,12 +68,12 @@ export class SupplierRepository extends Repository<Supplier> {
 
         try{
             await supplier.save();
-            console.log('Supplier Added.');
         }catch (error){
             throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
         }
 
         delete supplier.user;
+        delete supplier.type.suppliers;
         return supplier;
     }
 
@@ -71,20 +82,20 @@ export class SupplierRepository extends Repository<Supplier> {
         supplierType: SupplierType,
         user: User
     ): Promise<Supplier> {
-        const {id, name, country, city, streetAddress, type, notes} = supplierDto;
+
+        let {id, name, country, city, streetAddress, type, notes} = supplierDto;
 
         if (!id) {
             throw new NotAcceptableException('Supplier ID is not specified.');
         }
-        const supplier = await this.findOne({ where: {id, userId: user.id}}); //getSupplierById(id);
+        const supplier = await this.getSupplierById(id, user);
 
         if (!supplier) {
-            throw new NotFoundException(`Supplier with ID "${id}" not found.`);
+            throw new NotFoundException(`Supplier ID ${id} is not found.`);
         }
 
         if (name) {
-            const exists = await this.findOne({ where: { name, userId: user.id}});
-            if(exists){
+            if(await this.findOne({ where: { name, userId: user.id, id: Not(id)}})){
                 throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
             }
             supplier.name = name;
@@ -108,7 +119,26 @@ export class SupplierRepository extends Repository<Supplier> {
         await supplier.save();
 
         delete supplier.user;
+        delete supplier.type.suppliers;
         return supplier;
+    }
+
+    async getSupplierById(
+        id: number,
+        user: User,
+    ): Promise<Supplier> {
+
+        const query = await this.createQueryBuilder('supplier')
+            .leftJoinAndSelect('supplier.type','type')
+            .where('supplier.userId = :userId', { userId: user.id });
+
+        query.andWhere('supplier.id = :id', { id });
+
+        return query.getOne();
+
+        // if (!supplier){
+        //     throw new NotFoundException(`Supplier with ID "${id}" not found.`);
+        // }
     }
 
 }

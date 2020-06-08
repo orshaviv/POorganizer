@@ -2,7 +2,7 @@ import {
     Body,
     Controller,
     Get,
-    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe, UseGuards
+    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe, UseGuards, Logger
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
@@ -20,6 +20,7 @@ class SupplierTypes {
 @Controller('suppliers')
 @UseGuards(AuthGuard())
 export class SupplierController {
+    private logger = new Logger('SupplierController');
     constructor(
         private readonly supplierService: SupplierService,
         //private readonly contactService: ContactService
@@ -30,6 +31,7 @@ export class SupplierController {
         @Body(ValidationPipe) filterDto: GetSuppliersFilterDto,
         @GetUser() user: User,
     ): Promise<Supplier[]> {
+        this.logger.verbose(`User ${user.firstName} ${user.lastName} retrieving suppliers. Filters: ${JSON.stringify(filterDto)}.`);
         return this.supplierService.getSuppliers(filterDto, user);
     }
 

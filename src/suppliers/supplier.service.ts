@@ -27,21 +27,12 @@ export class SupplierService {
         return this.suppliersRepo.getSuppliers(filterDto, user);
     }
 
-    async getSupplierById(
+    getSupplierById(
         id: number,
         user: User,
         ): Promise<Supplier> {
 
-        const query = await this.suppliersRepo.createQueryBuilder('supplier')
-            .leftJoinAndSelect('supplier.type','type')
-            .where('supplier.id = :id', { id });
-
-        const supplier = query.getOne();
-
-        if (!supplier){
-            throw new NotFoundException(`Supplier with ID "${id}" not found.`);
-        }
-        return supplier;
+        return this.suppliersRepo.getSupplierById(id, user);
     }
 
     async getSupplierByName(name: string): Promise<Supplier> {

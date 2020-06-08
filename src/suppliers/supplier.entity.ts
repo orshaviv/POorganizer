@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne, CreateDateColumn} from "typeorm";
 import {User} from "../auth/user.entity";
 import {SupplierType} from "./supplier-type.entity";
 
@@ -27,6 +27,8 @@ export class Supplier extends BaseEntity {
 
     @Column({ nullable: true, unique: false})
     public notes: string;
+
+    @CreateDateColumn({ name: 'created_at' }) 'created_at': Date;
 
     @ManyToOne(type => User, user => user.suppliers, { eager: false } )
     public user: User;
