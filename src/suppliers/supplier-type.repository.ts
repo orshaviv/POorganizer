@@ -4,7 +4,9 @@ import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
 
 @EntityRepository(SupplierType)
 export class SupplierTypeRepository extends Repository<SupplierType> {
-    async createOrUpdateSupplierType(type: string): Promise<SupplierType> {
+    async createOrFindSupplierType(
+        type: string
+    ): Promise<SupplierType> {
         let supplierType = new SupplierType();
         supplierType.type = type;
 
@@ -25,12 +27,10 @@ export class SupplierTypeRepository extends Repository<SupplierType> {
         const query = this.createQueryBuilder('supplier_type');
 
         if (id) {
-            query.andWhere('(supplier_type.id = :id)', {id});
-
-            //return await this.find({id});
+            query.andWhere('(supplier_type.id = :id)', { id });
         } else if (search) {
             query.andWhere(
-                '(supplier_type.type LIKE :search)', {search: `%${search}%`}
+                '(supplier_type.type LIKE :search)', { search: `%${ search }%` }
             );
         }
 

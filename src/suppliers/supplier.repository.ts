@@ -3,6 +3,7 @@ import {Supplier} from "./supplier.entity";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {
+    BadRequestException,
     ConflictException,
     InternalServerErrorException,
     Logger,
@@ -11,7 +12,6 @@ import {
 } from "@nestjs/common";
 import {User} from "../auth/user.entity";
 import {SupplierType} from "./supplier-type.entity";
-import {filter} from "rxjs/operators";
 
 @EntityRepository(Supplier)
 export class SupplierRepository extends Repository<Supplier> {
@@ -69,7 +69,12 @@ export class SupplierRepository extends Repository<Supplier> {
         try{
             await supplier.save();
         }catch (error){
-            throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
+            if (error.code === 'ER_DUP_ENTRY') {
+                this.logger.verbose(`Supplier named "${supplierDto.name}" already exists`, error.code);
+                throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
+            }
+            this.logger.error(`Cannot add supplier`, error.stack);
+            throw new InternalServerErrorException(`Cannot add supplier.`);
         }
 
         delete supplier.user;
@@ -82,7 +87,6 @@ export class SupplierRepository extends Repository<Supplier> {
         supplierType: SupplierType,
         user: User
     ): Promise<Supplier> {
-
         let {id, name, country, city, streetAddress, type, notes} = supplierDto;
 
         if (!id) {
@@ -95,7 +99,7 @@ export class SupplierRepository extends Repository<Supplier> {
         }
 
         if (name) {
-            if(await this.findOne({ where: { name, userId: user.id, id: Not(id)}})){
+            if(await this.findOne({ where: { name, userId: user.id, id: Not(id) } })){
                 throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
             }
             supplier.name = name;
@@ -127,7 +131,6 @@ export class SupplierRepository extends Repository<Supplier> {
         id: number,
         user: User,
     ): Promise<Supplier> {
-
         const query = await this.createQueryBuilder('supplier')
             .leftJoinAndSelect('supplier.type','type')
             .where('supplier.userId = :userId', { userId: user.id });
@@ -135,10 +138,5 @@ export class SupplierRepository extends Repository<Supplier> {
         query.andWhere('supplier.id = :id', { id });
 
         return query.getOne();
-
-        // if (!supplier){
-        //     throw new NotFoundException(`Supplier with ID "${id}" not found.`);
-        // }
     }
-
 }

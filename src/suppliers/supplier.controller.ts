@@ -65,7 +65,7 @@ export class SupplierController {
     removeSupplier(
         @Body() filterDto: GetSuppliersFilterDto,
         @GetUser() user: User,
-    ): Promise<Supplier> {
+    ): Promise<void> {
         if (filterDto.id !== undefined && filterDto.search !== undefined){
             throw new BadRequestException('Specify only ID or name of supplier.');
         }
