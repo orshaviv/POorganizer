@@ -2,7 +2,16 @@ import {
     Body,
     Controller,
     Get,
-    Post, Delete, ValidationPipe, UsePipes, BadRequestException, Patch, Param, ParseIntPipe, UseGuards, Logger
+    Post,
+    Delete,
+    ValidationPipe,
+    UsePipes,
+    BadRequestException,
+    Patch,
+    ParseIntPipe,
+    UseGuards,
+    Logger,
+    NotFoundException
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
@@ -13,6 +22,9 @@ import {GetUser} from "../auth/get-user.decorator";
 import {User} from "../auth/user.entity";
 import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
 import {IsNotEmpty} from "class-validator";
+import {ContactService} from "../contacts/contact.service";
+import {ContactDTO} from "../contacts/dto/contact.dto";
+import {Contact} from "../contacts/contact.entity";
 
 class SupplierTypes {
 }
@@ -23,7 +35,7 @@ export class SupplierController {
     private logger = new Logger('SupplierController');
     constructor(
         private readonly supplierService: SupplierService,
-        //private readonly contactService: ContactService
+        private readonly contactService: ContactService
     ) {}
 
     @Get()
@@ -36,7 +48,6 @@ export class SupplierController {
     }
 
     @Get('id')
-
     getSupplierById(
         @Body('id', ParseIntPipe) id: number,
         @GetUser() user: User,
@@ -89,11 +100,18 @@ export class SupplierController {
         return this.supplierService.findTypes(getSuppliersTypesFilterDto);
     }
 
-    /*
     @Post('addcontact')
-    async addNewContact(@Body() contactDTO: ContactDTO){
-        let contact = await this.contactService.addContact(contactDTO);
-        return contact;
+    @UsePipes(ValidationPipe)
+    async addNewContact(
+        @Body() contactDto: ContactDTO,
+        @Body('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+    ): Promise<Contact>{
+        const supplier = await this.supplierService.getSupplierById(id, user);
+
+        if (!supplier) {
+            throw new NotFoundException(`Supplier with ID ${id} not found.`);
+        }
+        return await this.contactService.addContact(contactDto, supplier, user);
     }
-    */
 }

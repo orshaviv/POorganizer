@@ -3,7 +3,6 @@ import {Supplier} from "./supplier.entity";
 import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {
-    BadRequestException,
     ConflictException,
     InternalServerErrorException,
     Logger,
@@ -22,12 +21,15 @@ export class SupplierRepository extends Repository<Supplier> {
         user: User
     ): Promise<Supplier[]> {
         const {id, search} = filterDto;
-        const query = this.createQueryBuilder('supplier').leftJoinAndSelect('supplier.type','type');
+        const query = this.createQueryBuilder('supplier')
+            .leftJoinAndSelect('supplier.type','type')
+            .leftJoinAndSelect('supplier.contacts','contacts')
+            .leftJoinAndSelect('contacts.contactInformation','contactInformation');
 
-        query.where('supplier.userId = :userId', { userId: user.id })
+        query.where('supplier.userId = :userId', { userId: user.id });
 
         if (id) {
-            query.andWhere('supplier.id = :id', { id })
+            query.andWhere('supplier.id = :id', { id });
         }
 
         if (search) {
@@ -37,7 +39,14 @@ export class SupplierRepository extends Repository<Supplier> {
                     'supplier.city LIKE :search OR ' +
                     'supplier.streetAddress LIKE :search OR ' +
                     'supplier.type LIKE :search OR ' +
-                    'supplier.notes LIKE :search)', {search: `%${search}%`}
+                    'supplier.notes LIKE :search OR ' +
+                    'contacts.first_name LIKE :search OR ' +
+                    'contacts.last_name LIKE :search OR ' +
+                    'contacts.email LIKE :search OR ' +
+                    'contactInformation.phoneType LIKE :search OR ' +
+                    'contactInformation.cellphoneNumber LIKE :search OR ' +
+                    'contactInformation.phoneNumber LIKE :search)'
+                ,{search: `%${search}%`}
                     );
         }
 

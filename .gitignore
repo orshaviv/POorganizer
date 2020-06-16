@@ -8,5 +8,6 @@ config/*
 #File extensions
 *.js
 *.exe
+*.log
 
 #Files

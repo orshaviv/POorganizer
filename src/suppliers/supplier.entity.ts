@@ -1,6 +1,7 @@
-import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne, CreateDateColumn} from "typeorm";
+import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne, CreateDateColumn, OneToMany} from "typeorm";
 import {User} from "../auth/user.entity";
 import {SupplierType} from "./supplier-type.entity";
+import {Contact} from "../contacts/contact.entity";
 
 @Entity()
 export class Supplier extends BaseEntity {
@@ -19,11 +20,14 @@ export class Supplier extends BaseEntity {
     @Column({ nullable: true, unique: false})
     public streetAddress: string;
 
-    //@Column({ nullable: true, unique: false})
-    //public type: string;
-
-    @ManyToOne(type => SupplierType, type => type.suppliers, {eager: false} )
+    @ManyToOne(type => SupplierType, type => type.suppliers, { eager: false } )
     public type: SupplierType;
+
+    @Column()
+    public typeId: number;
+
+    @OneToMany(type => Contact, contact => contact.supplier, { eager: true } )
+    public contacts: Contact[];
 
     @Column({ nullable: true, unique: false})
     public notes: string;
@@ -35,7 +39,4 @@ export class Supplier extends BaseEntity {
 
     @Column()
     public userId: number;
-
-    @Column()
-    public typeId: number;
 }

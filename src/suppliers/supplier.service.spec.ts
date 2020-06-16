@@ -19,7 +19,7 @@ const mockSupplierRepository = () => ({
 });
 
 const mockSupplierTypeRepository = () => ({
-
+    createOrFindSupplierType: jest.fn()
 });
 
 describe('SupplierService',() => {
@@ -118,6 +118,16 @@ describe('SupplierService',() => {
     });
 
     describe('updateSupplier',() => {
+        it ('calls supplierRepo.updateSupplier() with valid fields and returns the result.', async () => {
+            const mockSupplierDto = {id: 1, name: 'Test Name', country: 'Test Country', type: 'Test Type'};
+            const mockSupplierType = {id: 1, type: 'Test Type'};
 
+            expect(supplierTypeRepo.createOrFindSupplierType).not.toHaveBeenCalled();
+            supplierTypeRepo.createOrFindSupplierType.mockResolvedValue(mockSupplierType);
+            supplierRepo.updateSupplier.mockResolvedValue('Test Supplier');
+            const result = await supplierService.updateSupplier(mockSupplierDto, mockUser);
+            expect(supplierTypeRepo.createOrFindSupplierType).toHaveBeenCalledWith(mockSupplierDto.type);
+            expect(result).toEqual('Test Supplier');
+        });
     });
 });

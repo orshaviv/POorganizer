@@ -1,6 +1,9 @@
-import {BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique} from "typeorm";
+import {BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import * as bcrypt from 'bcryptjs';
 import {Supplier} from "../suppliers/supplier.entity";
+
+import {ContactInformation} from "../contacts/contact-information.entity";
+import {Contact} from "../contacts/contact.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,6 +33,12 @@ export class User extends BaseEntity {
 
     @OneToMany(type => Supplier, supplier => supplier.user, { eager: true })
     suppliers: Supplier[];
+
+    @OneToMany(type => Contact, contact => contact.user, { eager: true })
+    contacts: Contact[];
+
+    @OneToMany(type => ContactInformation, contactInformation => contactInformation.user, { eager: true })
+    contactsInformation: ContactInformation[];
 
     async validatePassword(password: string): Promise<boolean> {
         const hash = await bcrypt.hash(password, this.salt);

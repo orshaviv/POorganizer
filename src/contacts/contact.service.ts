@@ -1,75 +1,85 @@
-import {HttpException, Injectable, NotAcceptableException, NotFoundException} from "@nestjs/common";
+import {Injectable, Logger, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
-import {Contact} from "./contact.interface";
-import {Repository} from "typeorm";
-import {ContactDTO} from "./contact.dto";
-import {setNewContact} from "./setNewContact";
+import {ContactRepository} from "./contact.repository";
+import {GetContactsFilterDto} from "./dto/get-contacts-filter.dto";
+import {User} from "../auth/user.entity";
+import {Contact} from "./contact.entity";
+import {ContactDTO} from "./dto/contact.dto";
 import {Supplier} from "../suppliers/supplier.entity";
-import {SupplierService} from "../suppliers/supplier.service";
-import {Injector} from "@nestjs/core/injector/injector";
+import {ContactInformationDto} from "./dto/contact-information.dto";
+import {ContactInformationRepository} from "./contact-information.repository";
+import {ContactInformation} from "./contact-information.entity";
+import {GetContactInformationFilterDto} from "./dto/get-contact-information-filter.dto";
 
 @Injectable()
 export class ContactService {
-    constructor(@InjectRepository(Contact)
-                private repo: Repository<Contact>,
-                private supplierService: SupplierService
-                ) {}
+    private logger = new Logger('ContactService');
+    constructor(
+        @InjectRepository(ContactRepository)
+        private contactsRepo: ContactRepository,
+        @InjectRepository(ContactInformationRepository)
+        private contactsInformationRepo: ContactInformationRepository
+    ) {}
 
-    welcomeScreen() {
-        return 'Welcome to contacts screen. For all contacts go to /contacts/all. ';
+    getContacts(
+        filterDto: GetContactsFilterDto,
+        user: User
+    ): Promise<Contact[]> {
+        return this.contactsRepo.getContacts(filterDto, user);
     }
 
-    /*
-    async getAllContacts() {
-        return await this.repo.find({});
-    }
+    async getContactById(
+        id: number,
+        user: User,
+    ): Promise<Contact> {
+        const contact = await this.contactsRepo.findOne( { id: id, userId: user.id });
 
-    async getContactByFirstName(name: string) {
-        return await this.repo.find({first_name: name});
-    }
-
-    async getContactBySupId(id: number) {
-        return await this.repo.find({supplier_id: id});
-    }
-
-    async addContact(contactDTO: ContactDTO) {
-        let supplier = await this.supplierService.getSupplierById(contactDTO.supplier_id);
-        if(!supplier){
-            throw new NotFoundException('Supplier id is not valid');
+        this.logger.verbose(`Contact found: ${JSON.stringify(contact)}`);
+        if (!contact){
+            throw new NotFoundException(`Contact with ID ${id} not found.`);
         }
 
-        let contact = setNewContact(contactDTO);
-        if (!contact) {
-            throw new NotAcceptableException('Contact is not valid');
-        }
-        await this.repo.save(contact);
         return contact;
-
-        return this.supplierService.getSupplierById(contactDTO.supplier_id).then((supplier) => {
-            if (!supplier){
-                throw new HttpException('Supplier id is not valid', 422);
-                //throw new Error('Supplier id is not valid');
-            }else{
-                let contact = setNewContact(contactDTO);
-                if (!contact) {
-                    throw new Error('Contact is not valid');
-                }
-                this.repo.save(contact);
-                throw new HttpException('Contact has been added', 200);
-            }
-        }).catch(res => res);
-
     }
 
-    async removeContact(id: number) {
-        let contactToRemove = await this.repo.findOne({id: id});
+    async addContact(
+        contactDto: ContactDTO,
+        supplier: Supplier,
+        user: User
+    ): Promise<Contact> {
+        const contact = await this.contactsRepo.addContact(contactDto, supplier, user);
 
-        if (contactToRemove) {
-            await this.repo.remove(contactToRemove);
-            throw new HttpException('Contact has been removed', 200);
-        } else {
-            throw new HttpException('Contact id not found', 404);
+        if (contact && contactDto.phone) {
+            let contactInformationDto = new ContactInformationDto();
+            contactInformationDto.phoneType = contactDto.phoneType;
+            contactInformationDto.locale = contactDto.locale;
+            contactInformationDto.phone = contactDto.phone;
+
+            await this.addContactInformation(contactInformationDto, contact, user);
         }
+
+        return contact;
     }
-    */
+
+    async addContactInformation(
+        contactInformationDto: ContactInformationDto,
+        contact: Contact,
+        user: User,
+    ): Promise<ContactInformation> {
+        const { phoneType, locale, phone, contactId } = contactInformationDto;
+
+        if (!contact) {
+            contact = await this.getContactById(contactInformationDto.contactId, user);
+        }
+
+        this.logger.verbose('Adding contact information.');
+        return await this.contactsInformationRepo.addContactInformation(contactInformationDto, contact, user);
+    }
+
+    removeContactInformation(
+        id: number,
+        user: User
+    ): Promise<void> {
+        return this.contactsInformationRepo.removeContactInformation(id, user);
+    }
 }
