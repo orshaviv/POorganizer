@@ -1,4 +1,13 @@
-import {Entity, Column, PrimaryGeneratedColumn, BaseEntity, ManyToOne, CreateDateColumn, OneToMany} from "typeorm";
+import {
+    Entity,
+    Column,
+    PrimaryGeneratedColumn,
+    BaseEntity,
+    ManyToOne,
+    CreateDateColumn,
+    OneToMany,
+    ManyToMany, JoinTable
+} from "typeorm";
 import {User} from "../auth/user.entity";
 import {SupplierType} from "./supplier-type.entity";
 import {Contact} from "../contacts/contact.entity";
@@ -8,7 +17,7 @@ export class Supplier extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @Column({length: 45, unique: true})
+    @Column({length: 45, unique: false})
     public name: string;
 
     @Column({ nullable: true, unique: false})
@@ -20,13 +29,11 @@ export class Supplier extends BaseEntity {
     @Column({ nullable: true, unique: false})
     public streetAddress: string;
 
-    @ManyToOne(type => SupplierType, type => type.suppliers, { eager: false } )
-    public type: SupplierType;
+    @ManyToMany(type => SupplierType, type => type.suppliers)
+    @JoinTable()
+    public types: SupplierType[];
 
-    @Column()
-    public typeId: number;
-
-    @OneToMany(type => Contact, contact => contact.supplier, { eager: true } )
+    @OneToMany(type => Contact, contact => contact.supplier)
     public contacts: Contact[];
 
     @Column({ nullable: true, unique: false})
@@ -34,7 +41,7 @@ export class Supplier extends BaseEntity {
 
     @CreateDateColumn({ name: 'created_at' }) 'created_at': Date;
 
-    @ManyToOne(type => User, user => user.suppliers, { eager: false } )
+    @ManyToOne(type => User, user => user.suppliers)
     public user: User;
 
     @Column()

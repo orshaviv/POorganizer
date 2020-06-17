@@ -4,7 +4,7 @@ export class ContactDTO{
 
     public phoneType!: string;
     public locale!: string;
-    public phone!: string;
+    public phoneNumber!: string;
     public contact_id!: number;
 
     public email!: string;

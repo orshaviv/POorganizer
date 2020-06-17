@@ -9,19 +9,15 @@ export class ContactInformation extends BaseEntity {
     public id: number;
 
     @Column({ nullable: false } )
-    @IsNotEmpty()
     public phoneType: string;
 
     @Column('nvarchar', { nullable: false, default: 'IL' } )
-    @IsNotEmpty()
     public locale: string;
 
     @Column( { unique: true, default: null  })
-    @IsMobilePhone(this.locale)
     public cellphoneNumber: string;
 
     @Column( { unique: true, default: null })
-    @IsPhoneNumber(null)
     public phoneNumber: string;
 
     @ManyToOne(type => Contact, contact => contact.contactInformation, { eager: false })

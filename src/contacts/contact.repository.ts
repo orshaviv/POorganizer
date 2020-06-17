@@ -5,20 +5,11 @@ import {User} from "../auth/user.entity";
 import {GetContactsFilterDto} from "./dto/get-contacts-filter.dto";
 import {ContactDTO} from "./dto/contact.dto";
 import {Supplier} from "../suppliers/supplier.entity";
-import {InjectRepository} from "@nestjs/typeorm";
-import {ContactInformationRepository} from "./contact-information.repository";
 
 @Injectable()
 @EntityRepository(Contact)
 export class ContactRepository extends Repository<Contact> {
     private logger = new Logger('ContactRepository');
-
-    constructor(
-        @InjectRepository(ContactInformationRepository)
-        private contactsInformationRepo: ContactInformationRepository
-    ) {
-        super();
-    }
 
     async getContacts(
         filterDto: GetContactsFilterDto,
@@ -37,20 +28,25 @@ export class ContactRepository extends Repository<Contact> {
 
         if (search) {
             query.andWhere(
-                '(supplier_contact.first_name LIKE :search OR ' +
+                'supplier_contact.first_name LIKE :search OR ' +
                 'supplier_contact.last_name LIKE :search OR ' +
-                'supplier_contact.email LIKE :search OR ', {search: `%${search}%`}
+                'supplier_contact.email LIKE :search OR ' +
+                'contactInformation.phoneType LIKE :search OR ' +
+                'contactInformation.locale = :search OR ' +
+                'contactInformation.cellphoneNumber LIKE :search OR ' +
+                'contactInformation.phoneNumber LIKE :search'
+                , {search: `%${search}%`}
             );
         }
 
         if (supplierQuery) {
             query.andWhere(
-                '(supplier_contact.supplier.name LIKE :search OR ' +
-                'supplier_contact.supplier.country LIKE :search OR ' +
-                'supplier_contact.supplier.city LIKE :search OR ' +
-                'supplier_contact.supplier.streetAddress LIKE :search OR ' +
-                'supplier_contact.supplier.type LIKE :search OR ' +
-                'supplier_contact.supplier.notes LIKE :search)', {search: `%${supplierQuery}%`}
+                'supplier.name LIKE :search OR ' +
+                'supplier.country LIKE :search OR ' +
+                'supplier.city LIKE :search OR ' +
+                'supplier.streetAddress LIKE :search OR ' +
+                'supplier.type LIKE :search OR ' +
+                'supplier.notes LIKE :search',{search: `%${supplierQuery}%`}
             );
         }
 

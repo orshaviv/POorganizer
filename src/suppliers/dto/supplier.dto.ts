@@ -1,4 +1,4 @@
-import {IsNotEmpty, IsOptional} from "class-validator";
+import {IsArray, IsNotEmpty, IsOptional} from "class-validator";
 
 export class SupplierDTO{
     @IsOptional()
@@ -22,7 +22,8 @@ export class SupplierDTO{
 
     @IsOptional()
     @IsNotEmpty()
-    public type: string;
+    @IsArray()
+    public types: string[];
 
     @IsOptional()
     @IsNotEmpty()

@@ -60,21 +60,21 @@ export class ContactInformationRepository extends Repository<ContactInformation>
         contact: Contact,
         user: User
     ): Promise<ContactInformation> {
-        const { phoneType, locale, phone } = contactInformationDto;
+        const { phoneType, locale, phoneNumber } = contactInformationDto;
 
         let contactInformation = new ContactInformation();
-        contactInformation.setPhoneNumber(phoneType, locale, phone);
+        contactInformation.setPhoneNumber(phoneType, locale, phoneNumber);
         contactInformation.contact = contact;
         contactInformation.user = user;
 
-        this.logger.verbose(JSON.stringify(contact));
+        this.logger.verbose(`Adding contact information to contact ID ${ contact.id }.`);
 
         try{
             await contactInformation.save();
         }catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
-                this.logger.verbose(`Contact with phone number "${ phone }" already exists`, error.code);
-                throw new ConflictException(`Contact with phone number "${ phone }" already exists`);
+                this.logger.verbose(`Contact with phone number "${ phoneNumber }" already exists`, error.code);
+                throw new ConflictException(`Contact with phone number "${ phoneNumber }" already exists`);
             }
             this.logger.error(`Cannot add contact information`, error.stack);
             throw new InternalServerErrorException(`Cannot add contact information.`);
@@ -92,7 +92,7 @@ export class ContactInformationRepository extends Repository<ContactInformation>
     ): Promise<void> {
         const res = await this.delete({id, userId: user.id});
         if (res.affected === 0){
-            throw new NotFoundException(`Contact information with ID "${id}" not found.`);
+            throw new NotFoundException(`Contact information with ID "${ id }" not found.`);
         }
     }
 }

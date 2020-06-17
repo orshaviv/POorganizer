@@ -50,7 +50,7 @@ export class SupplierController {
     @Get('id')
     getSupplierById(
         @Body('id', ParseIntPipe) id: number,
-        @GetUser() user: User,
+        @GetUser() user: User
     ): Promise<Supplier> {
         return this.supplierService.getSupplierById(id, user);
     }
@@ -58,8 +58,9 @@ export class SupplierController {
     @Get('name')
     getSupplierByName(
         @Body('name') name: string,
+        @GetUser() user: User
     ): Promise<Supplier> {
-        return this.supplierService.getSupplierByName(name);
+        return this.supplierService.getSupplierByName(name, user);
     }
 
     @Post('add')
@@ -74,13 +75,10 @@ export class SupplierController {
     @Delete('remove')
     @UsePipes(ValidationPipe)
     removeSupplier(
-        @Body() filterDto: GetSuppliersFilterDto,
+        @Body('id', ParseIntPipe) id: number,
         @GetUser() user: User,
     ): Promise<void> {
-        if (filterDto.id !== undefined && filterDto.search !== undefined){
-            throw new BadRequestException('Specify only ID or name of supplier.');
-        }
-        return this.supplierService.removeSupplier(filterDto, user);
+        return this.supplierService.removeSupplier(id, user);
     }
 
     @Patch('/update')
@@ -114,4 +112,5 @@ export class SupplierController {
         }
         return await this.contactService.addContact(contactDto, supplier, user);
     }
+
 }

@@ -49,11 +49,11 @@ export class ContactService {
     ): Promise<Contact> {
         const contact = await this.contactsRepo.addContact(contactDto, supplier, user);
 
-        if (contact && contactDto.phone) {
+        if (contact && contactDto.phoneNumber) {
             let contactInformationDto = new ContactInformationDto();
             contactInformationDto.phoneType = contactDto.phoneType;
             contactInformationDto.locale = contactDto.locale;
-            contactInformationDto.phone = contactDto.phone;
+            contactInformationDto.phoneNumber = contactDto.phoneNumber;
 
             await this.addContactInformation(contactInformationDto, contact, user);
         }
@@ -66,7 +66,7 @@ export class ContactService {
         contact: Contact,
         user: User,
     ): Promise<ContactInformation> {
-        const { phoneType, locale, phone, contactId } = contactInformationDto;
+        const { phoneType, locale, phoneNumber, contactId } = contactInformationDto;
 
         if (!contact) {
             contact = await this.getContactById(contactInformationDto.contactId, user);

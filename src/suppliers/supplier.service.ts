@@ -33,24 +33,21 @@ export class SupplierService {
     ): Promise<Supplier> {
         const supplier = await this.suppliersRepo.getSupplierById(id, user);
 
-        this.logger.verbose(`Supplier found: ${JSON.stringify(supplier)}`);
+        this.logger.verbose(`Supplier found: ${ JSON.stringify(supplier) }`);
         if (!supplier){
-            throw new NotFoundException(`Supplier with ID ${id} not found.`);
+            throw new NotFoundException(`Supplier with ID ${ id } not found.`);
         }
         return supplier;
     }
 
     async getSupplierByName(
-        name: string
+        name: string,
+        user: User
     ): Promise<Supplier> {
-        const query = await this.suppliersRepo.createQueryBuilder('supplier')
-            .leftJoinAndSelect('supplier.type','type')
-            .where('supplier.name = :name', {name});
-
-        const supplier = query.getOne();
+        const supplier = await this.suppliersRepo.getSupplierByName(name, user);
 
         if (!supplier){
-            throw new NotFoundException(`Supplier named "${name}" not found.`);
+            throw new NotFoundException(`Supplier named "${ name }" not found.`);
         }
         return supplier;
     }
@@ -59,30 +56,20 @@ export class SupplierService {
         supplierDto: SupplierDTO,
         user: User
     ): Promise<Supplier> {
-        let supplierType: SupplierType = null;
-        if(supplierDto.type){
-            supplierType = await this.supplierTypeRepository.createOrFindSupplierType(supplierDto.type);
+        let supplierTypes: SupplierType[] = [];
+        if(supplierDto.types){
+            supplierTypes = await this.supplierTypeRepository.createOrFindSupplierType(supplierDto.types);
         }
-        return await this.suppliersRepo.addNewSupplier(supplierDto, supplierType, user);
+        return await this.suppliersRepo.addNewSupplier(supplierDto, supplierTypes, user);
     }
 
     async removeSupplier(
-        filterDto: GetSuppliersFilterDto,
+        id: number,
         user: User,
     ): Promise<void> {
-        const { id, search } = filterDto;
-        if (id) {
-            const res = await this.suppliersRepo.delete({id, userId: user.id});
-            if (res.affected === 0){
-                throw new NotFoundException(`Supplier with ID "${id}" not found.`);
-            }
-        }else if (search) {
-            const res = await this.suppliersRepo.delete({name: search, userId: user.id} );
-            if (res.affected === 0){
-                throw new NotFoundException(`Supplier named "${search}" not found.`);
-            }
-        }else{
-            throw new BadRequestException('Supplier details not valid.');
+        const res = await this.suppliersRepo.delete({id, userId: user.id});
+        if (res.affected === 0){
+            throw new NotFoundException(`Supplier with ID "${id}" not found.`);
         }
     }
 
@@ -90,11 +77,13 @@ export class SupplierService {
         supplierDto: SupplierDTO,
         user: User,
     ): Promise<Supplier>{
-        let supplierType: SupplierType = null;
-        if(supplierDto.type){
-            supplierType = await this.supplierTypeRepository.createOrFindSupplierType(supplierDto.type);
+        let supplierTypes: SupplierType[] = [];
+        if(supplierDto.types){
+            supplierTypes = await this.supplierTypeRepository.createOrFindSupplierType(supplierDto.types);
+        }else{
+            supplierTypes = null;
         }
-        return await this.suppliersRepo.updateSupplier(supplierDto, supplierType, user);
+        return await this.suppliersRepo.updateSupplier(supplierDto, supplierTypes, user);
     }
 
     findTypes(

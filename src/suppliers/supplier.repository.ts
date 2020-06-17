@@ -22,7 +22,7 @@ export class SupplierRepository extends Repository<Supplier> {
     ): Promise<Supplier[]> {
         const {id, search} = filterDto;
         const query = this.createQueryBuilder('supplier')
-            .leftJoinAndSelect('supplier.type','type')
+            .leftJoinAndSelect('supplier.types','types')
             .leftJoinAndSelect('supplier.contacts','contacts')
             .leftJoinAndSelect('contacts.contactInformation','contactInformation');
 
@@ -38,7 +38,7 @@ export class SupplierRepository extends Repository<Supplier> {
                     'supplier.country LIKE :search OR ' +
                     'supplier.city LIKE :search OR ' +
                     'supplier.streetAddress LIKE :search OR ' +
-                    'supplier.type LIKE :search OR ' +
+                    'types.type LIKE :search OR ' +
                     'supplier.notes LIKE :search OR ' +
                     'contacts.first_name LIKE :search OR ' +
                     'contacts.last_name LIKE :search OR ' +
@@ -61,42 +61,43 @@ export class SupplierRepository extends Repository<Supplier> {
 
     async addNewSupplier(
         supplierDto: SupplierDTO,
-        supplierType: SupplierType,
+        supplierTypes: SupplierType[],
         user: User
     ): Promise<Supplier> {
+
+        if ( await this.findOne({ where: { name: supplierDto.name, userId: user.id } }) ) {
+            this.logger.verbose(`Supplier named "${supplierDto.name}" already exists.`);
+            throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
+        }
+
         let supplier = new Supplier();
 
         supplier.name = supplierDto.name;
-        supplier.country = !supplierDto.country? null : supplierDto.country;
-        supplier.city = !supplierDto.city? null : supplierDto.city;
-        supplier.streetAddress = !supplierDto.streetAddress? null : supplierDto.streetAddress;
-        supplier.type = !supplierType? null : supplierType;
-        supplier.notes = !supplierDto.notes? null : supplierDto.notes;
+        supplier.country = !supplierDto.country ? null : supplierDto.country;
+        supplier.city = !supplierDto.city ? null : supplierDto.city;
+        supplier.streetAddress = !supplierDto.streetAddress ? null : supplierDto.streetAddress;
+        supplier.types = supplierTypes;
+        supplier.notes = !supplierDto.notes ? null : supplierDto.notes;
 
         supplier.user = user;
 
         try{
             await supplier.save();
         }catch (error){
-            if (error.code === 'ER_DUP_ENTRY') {
-                this.logger.verbose(`Supplier named "${supplierDto.name}" already exists`, error.code);
-                throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
-            }
             this.logger.error(`Cannot add supplier`, error.stack);
             throw new InternalServerErrorException(`Cannot add supplier.`);
         }
 
         delete supplier.user;
-        delete supplier.type.suppliers;
         return supplier;
     }
 
     async updateSupplier(
         supplierDto: SupplierDTO,
-        supplierType: SupplierType,
+        supplierTypes: SupplierType[],
         user: User
     ): Promise<Supplier> {
-        let {id, name, country, city, streetAddress, type, notes} = supplierDto;
+        let {id, name, country, city, streetAddress, notes} = supplierDto;
 
         if (!id) {
             throw new NotAcceptableException('Supplier ID is not specified.');
@@ -122,8 +123,8 @@ export class SupplierRepository extends Repository<Supplier> {
         if (streetAddress){
             supplier.streetAddress = streetAddress;
         }
-        if (supplierType){
-            supplier.type = supplierType;
+        if (supplierTypes !== null){
+            supplier.types = supplierTypes;
         }
         if (notes){
             supplier.notes = notes;
@@ -132,7 +133,6 @@ export class SupplierRepository extends Repository<Supplier> {
         await supplier.save();
 
         delete supplier.user;
-        delete supplier.type.suppliers;
         return supplier;
     }
 
@@ -141,10 +141,23 @@ export class SupplierRepository extends Repository<Supplier> {
         user: User,
     ): Promise<Supplier> {
         const query = await this.createQueryBuilder('supplier')
-            .leftJoinAndSelect('supplier.type','type')
+            .leftJoinAndSelect('supplier.types','types')
             .where('supplier.userId = :userId', { userId: user.id });
 
         query.andWhere('supplier.id = :id', { id });
+
+        return query.getOne();
+    }
+
+    async getSupplierByName(
+        name: string,
+        user: User
+    ): Promise<Supplier> {
+        const query = await this.createQueryBuilder('supplier')
+            .leftJoinAndSelect('supplier.types','types')
+            .where('supplier.userId = :userId', { userId: user.id });
+
+        query.andWhere('supplier.name = :name', { name });
 
         return query.getOne();
     }

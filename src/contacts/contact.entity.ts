@@ -27,18 +27,18 @@ export class Contact extends BaseEntity {
     @IsEmail()
     public email!: string;
 
-    @OneToMany(type => ContactInformation, contactInformation => contactInformation.contact, { eager: true })
+    @OneToMany(type => ContactInformation,contactInformation => contactInformation.contact)
     public contactInformation: ContactInformation[];
 
     @CreateDateColumn({ name: 'created_at' }) 'created_at': Date;
 
-    @ManyToOne(type => Supplier, supplier => supplier.contacts, { eager: false } )
+    @ManyToOne(type => Supplier,supplier => supplier.contacts)
     public supplier: Supplier;
 
     @Column()
     public supplierId: number;
 
-    @ManyToOne(type => User, user => user.contacts, { eager: false } )
+    @ManyToOne(type => User,user => user.contacts)
     public user: User;
 
     @Column()
