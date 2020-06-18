@@ -17,14 +17,13 @@ export class Contact extends BaseEntity {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @Column({length: 50, unique: false})
+    @Column({ length: 50, unique: false })
     public first_name: string;
 
-    @Column({ length: 50, unique: false})
+    @Column({ length: 50, unique: false })
     public last_name: string;
 
-    @Column({unique: true})
-    @IsEmail()
+    @Column({ unique: false, default: '' })
     public email!: string;
 
     @OneToMany(type => ContactInformation,contactInformation => contactInformation.contact)

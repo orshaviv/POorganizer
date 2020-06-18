@@ -40,15 +40,15 @@ export class ContactController {
         return this.contactService.getContactById(id, user);
     }
 
-    @Post('add')
-    @UsePipes(ValidationPipe)
-    addContact(
-        @Body() contactDto: ContactDTO,
-        @Body() supplier: Supplier,
-        @GetUser() user: User,
-    ): Promise<Contact> {
-        return this.contactService.addContact(contactDto, supplier, user);
-    }
+    // @Post('add')
+    // @UsePipes(ValidationPipe)
+    // addContact(
+    //     @Body() contactDto: ContactDTO,
+    //     @Body() supplier: Supplier,
+    //     @GetUser() user: User,
+    // ): Promise<Contact> {
+    //     return this.contactService.addContact(contactDto, supplier, user);
+    // }
 
     @Post('addcontactinformation')
     @UsePipes(ValidationPipe)

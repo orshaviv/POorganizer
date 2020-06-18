@@ -34,9 +34,6 @@ export class SupplierService {
         const supplier = await this.suppliersRepo.getSupplierById(id, user);
 
         this.logger.verbose(`Supplier found: ${ JSON.stringify(supplier) }`);
-        if (!supplier){
-            throw new NotFoundException(`Supplier with ID ${ id } not found.`);
-        }
         return supplier;
     }
 
@@ -46,9 +43,7 @@ export class SupplierService {
     ): Promise<Supplier> {
         const supplier = await this.suppliersRepo.getSupplierByName(name, user);
 
-        if (!supplier){
-            throw new NotFoundException(`Supplier named "${ name }" not found.`);
-        }
+        this.logger.verbose(`Supplier found: ${ JSON.stringify(supplier) }`);
         return supplier;
     }
 

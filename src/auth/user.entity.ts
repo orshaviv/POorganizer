@@ -4,6 +4,8 @@ import {Supplier} from "../suppliers/supplier.entity";
 
 import {ContactInformation} from "../contacts/contact-information.entity";
 import {Contact} from "../contacts/contact.entity";
+import {Item} from "../items/item.entity";
+import {PurchaseOrder} from "../purchaseorder/purchaseorder.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -36,6 +38,12 @@ export class User extends BaseEntity {
 
     @OneToMany(type => Contact, contact => contact.user, { eager: true })
     contacts: Contact[];
+
+    @OneToMany(type => Item, item => item.user, { eager: true })
+    items: Item[];
+
+    @OneToMany(type => PurchaseOrder, po => po.user, { eager: true })
+    purchaseOrders: PurchaseOrder[];
 
     @OneToMany(type => ContactInformation, contactInformation => contactInformation.user, { eager: true })
     contactsInformation: ContactInformation[];
