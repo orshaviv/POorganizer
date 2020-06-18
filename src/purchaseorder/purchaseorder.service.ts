@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     ConflictException,
     Injectable,
     InternalServerErrorException,
@@ -13,7 +14,6 @@ import {DeliveryMethod, PaymentStatus, POStatus, PurchaseOrder} from "./purchase
 import {PurchaseOrderDto} from "./dto/purchase-order.dto";
 import {SupplierService} from "../suppliers/supplier.service";
 import {ContactService} from "../contacts/contact.service";
-import {GetUser} from "../auth/get-user.decorator";
 import {ItemService} from "../items/item.service";
 import {Supplier} from "../suppliers/supplier.entity";
 import {SupplierDTO} from "../suppliers/dto/supplier.dto";
@@ -21,10 +21,13 @@ import {Contact} from "../contacts/contact.entity";
 import {ContactDTO} from "../contacts/dto/contact.dto";
 import {Item} from "../items/item.entity";
 import {ItemDto} from "../items/dto/item-dto";
+import {UpdatePurchaseOrderDto} from "./dto/update-purchase-order.dto";
 
 @Injectable()
 export class PurchaseOrderService {
     private logger = new Logger('PurchaseOrderService');
+
+    private defaultTaxValue = 0.17;
 
     constructor(
         @InjectRepository(PurchaseOrderRepository)
@@ -36,9 +39,15 @@ export class PurchaseOrderService {
     ) {}
 
     getPurchaseOrders(
-        @GetUser() user: User,
+        user: User,
     ): Promise<PurchaseOrder[]> {
         return this.purchaseOrderRepo.getPurchaseOrders(user);
+    }
+
+    getPurchaseOrderById(
+        id: number, user: User
+    ): Promise<PurchaseOrder> {
+        return this.purchaseOrderRepo.findOne({ id, userId: user.id });
     }
 
     async createPurchaseOrder(
@@ -47,16 +56,13 @@ export class PurchaseOrderService {
     ): Promise<PurchaseOrder> {
         let purchaseOrder = new PurchaseOrder();
 
-        const supplierId = purchaseOrderDto.supplierId ? purchaseOrderDto.supplierId : null;
-        const supplierName = purchaseOrderDto.supplierName ? purchaseOrderDto.supplierName : null;
-
-        const supplier = await this.getSupplierFromSupplierRepository(supplierId, supplierName, user);
+        const supplier = await this.getOrCreateSupplierFromSupplierRepository(purchaseOrderDto, user);
         purchaseOrder.supplierName = supplier.name;
 
-        const contact = await this.getContactFromContactRepository(purchaseOrderDto, supplier, user);
+        const contact = await this.getOrCreateContactFromContactRepository(purchaseOrderDto, supplier, user);
         purchaseOrder.contactName = contact.first_name + ' ' + contact.last_name;
 
-        const { quantities, catalogNumbers, itemsId, details, itemsCost } = purchaseOrderDto;
+        const { catalogNumbers, itemsId, quantities, details, itemsCost } = purchaseOrderDto;
 
         const itemsListLength = itemsId? itemsId.length : catalogNumbers.length;
 
@@ -74,15 +80,14 @@ export class PurchaseOrderService {
                 itemDto.catalogNumber = catalogNumbers[itemIndex];
                 item = await this.itemService.createOrFindItem(itemDto, user);
             }
-
             itemsList.push(item);
         }
-        purchaseOrder.quantity = quantities.map(quantity => quantity.toString());
         purchaseOrder.catalogNumber = itemsList.map(item => item.catalogNumber);
+        purchaseOrder.quantity = quantities.map(quantity => quantity.toString());
         purchaseOrder.details = details;
         purchaseOrder.itemCost = itemsCost.map(itemCost => itemCost.toString());
         purchaseOrder.totalCostBeforeTax = itemsCost.reduce( (a, b) => a + b, 0);
-        purchaseOrder.taxPercentage = purchaseOrderDto.taxPercentage? purchaseOrderDto.taxPercentage : 0.17;
+        purchaseOrder.taxPercentage = purchaseOrderDto.taxPercentage || this.defaultTaxValue;
 
         purchaseOrder.poId = await this.createPoId(user);
         purchaseOrder.poStatus = POStatus.OPEN;
@@ -95,10 +100,11 @@ export class PurchaseOrderService {
         purchaseOrder.paymentStatus = PaymentStatus.PENDING;
         purchaseOrder.completionDate = new Date(purchaseOrderDto.completionDate);
 
-        purchaseOrder.companyCode = "companyCode";
-        purchaseOrder.companyAddress = "companyAddress";
-        purchaseOrder.companyEmail = "companyEmail";
-        purchaseOrder.companyWebsite = "companyWebsite";
+        purchaseOrder.companyName = user.userPreferences.companyName || "";
+        purchaseOrder.companyCode = user.userPreferences.companyCode || "";
+        purchaseOrder.companyAddress = user.userPreferences.companyAddress || "";
+        purchaseOrder.companyEmail = user.userPreferences.companyEmail || "";
+        purchaseOrder.companyWebsite = user.userPreferences.companyWebsite || "";
 
         purchaseOrder.user = user;
 
@@ -112,7 +118,40 @@ export class PurchaseOrderService {
         return purchaseOrder;
     }
 
-    private async getSupplierFromSupplierRepository(supplierId: number, supplierName: string, user: User): Promise<Supplier> {
+    async updatePurchaseOrderStatus(
+        updatePurchaseOrderDto: UpdatePurchaseOrderDto,
+        user: User
+    ): Promise<PurchaseOrder> {
+        const { id, poStatus, deliveryMethod, paymentMethod, paymentStatus, completionDate } = updatePurchaseOrderDto;
+
+        const purchaseOrder = await this.getPurchaseOrderById(id, user);
+
+        if(!purchaseOrder)
+            throw new NotFoundException(`PO with ID ${ id } not found.`);
+
+        if (poStatus)
+            purchaseOrder.poStatus = this.updatePoStatus(poStatus);
+        if (deliveryMethod)
+            purchaseOrder.deliveryMethod = this.updateDeliveryMethod(deliveryMethod);
+        if (paymentMethod)
+            purchaseOrder.paymentMethod = paymentMethod;
+        if (paymentStatus)
+            purchaseOrder.paymentStatus = this.updatePaymentStatus(paymentStatus);
+        if (completionDate)
+            purchaseOrder.completionDate = new Date(completionDate);
+
+        await purchaseOrder.save();
+
+        delete purchaseOrder.user;
+        return purchaseOrder;
+    }
+
+    private async getOrCreateSupplierFromSupplierRepository(
+        purchaseOrderDto: PurchaseOrderDto,
+        user: User
+    ): Promise<Supplier> {
+        const { supplierId, supplierName } = purchaseOrderDto;
+
         let supplier: Supplier;
 
         if (supplierId) {
@@ -135,7 +174,11 @@ export class PurchaseOrderService {
         return supplier;
     }
 
-    private async getContactFromContactRepository(purchaseOrderDto: PurchaseOrderDto, supplier: Supplier, user: User): Promise<Contact> {
+    private async getOrCreateContactFromContactRepository(
+        purchaseOrderDto: PurchaseOrderDto,
+        supplier: Supplier,
+        user: User
+    ): Promise<Contact> {
         const { contactId, contactFirstName, contactLastName } = purchaseOrderDto;
 
         let contact: Contact;
@@ -167,11 +210,41 @@ export class PurchaseOrderService {
         const poTillLastYear = await this.purchaseOrderRepo
             .getPurchaseOrdersUntilDate(lastYearDate, user);
 
-        this.logger.log(`till now: ${poTillNow.length}. till last year: ${poTillLastYear.length}`);
         const yearlyPoCount = poTillNow.length - poTillLastYear.length;
         if (yearlyPoCount < 0)
             throw new ConflictException('Something went wrong counting the POs.');
 
         return currentDate.getFullYear().toString().substr(-2) + yearlyPoCount.toString().padStart(3, '0');
+    }
+
+    private updatePoStatus(poStatus: string): POStatus {
+        if (poStatus.toUpperCase() === 'OPEN') {
+            return POStatus.OPEN;
+        }else if (poStatus.toUpperCase() === 'SENT') {
+            return POStatus.SENT
+        }else if (poStatus.toUpperCase() === 'CANCELED') {
+            return POStatus.CANCELED;
+        }
+        throw new BadRequestException('PO status is not valid');
+    }
+
+    private updateDeliveryMethod(deliveryMethod: string): DeliveryMethod {
+        if (deliveryMethod.toUpperCase() === 'PICKUP') {
+            return DeliveryMethod.PICKUP;
+        } else if (deliveryMethod.toUpperCase() === 'DELIVERY') {
+            return DeliveryMethod.DELIVERY;
+        }
+        throw new BadRequestException('Delivery method is not valid');
+    }
+
+    private updatePaymentStatus(paymentStatus: string): PaymentStatus {
+        if (paymentStatus.toUpperCase() === 'PAID') {
+            return PaymentStatus.PAID;
+        } else if (paymentStatus.toUpperCase() === 'REFUND') {
+            return PaymentStatus.REFUND;
+        }else if (paymentStatus.toUpperCase() === 'PENDING') {
+            return PaymentStatus.PENDING;
+        }
+        throw new BadRequestException('Payment method is not valid');
     }
 }

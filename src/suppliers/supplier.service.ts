@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, Logger, NotFoundException} from "@nestjs/common";
+import {Injectable, Logger, NotFoundException} from "@nestjs/common";
 import {Supplier} from "./supplier.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {SupplierDTO} from "./dto/supplier.dto";

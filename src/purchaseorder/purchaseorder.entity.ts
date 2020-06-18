@@ -67,6 +67,9 @@ export class PurchaseOrder extends BaseEntity {
 
     //Author and company details
     @Column()
+    public companyName: string;
+
+    @Column()
     public companyCode: string;
 
     @Column()

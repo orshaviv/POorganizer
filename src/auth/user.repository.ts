@@ -4,11 +4,13 @@ import {AuthCredentialsDto} from "./dto/auth-credentials.dto";
 import {ConflictException, InternalServerErrorException, Logger} from "@nestjs/common";
 import * as bcrypt from 'bcryptjs';
 import {UserValidationDto} from "./dto/user-validation.dto";
+import {UserPreferences} from "../user-preferences/user-preferences.entity";
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
     private logger = new Logger('UserRepository');
     async signUp(
+        userPreferences: UserPreferences,
         authCredentialDto: AuthCredentialsDto
     ): Promise<void> {
         const {username, password, email, firstName, lastName} = authCredentialDto;
@@ -22,6 +24,8 @@ export class UserRepository extends Repository<User> {
         user.email = email;
         user.firstName = firstName;
         user.lastName = lastName;
+
+        user.userPreferences = userPreferences;
 
         try{
             await user.save();

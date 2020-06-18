@@ -12,6 +12,7 @@ import {ContactService} from "../contacts/contact.service";
 import {ItemService} from "../items/item.service";
 import {PurchaseOrderController} from "./purchaseorder.controller";
 import {ContactInformationRepository} from "../contacts/contact-information.repository";
+import {UserPreferencesRepository} from "../user-preferences/user-preferences.repository";
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import {ContactInformationRepository} from "../contacts/contact-information.repo
             ContactRepository,
             ContactInformationRepository,
             ItemRepository,
+            UserPreferencesRepository
         ]),
         AuthModule
     ],

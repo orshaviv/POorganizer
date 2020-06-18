@@ -25,9 +25,7 @@ import {IsNotEmpty} from "class-validator";
 import {ContactService} from "../contacts/contact.service";
 import {ContactDTO} from "../contacts/dto/contact.dto";
 import {Contact} from "../contacts/contact.entity";
-
-class SupplierTypes {
-}
+import {SupplierType} from "./supplier-type.entity";
 
 @Controller('suppliers')
 @UseGuards(AuthGuard())
@@ -94,7 +92,7 @@ export class SupplierController {
     @UsePipes(ValidationPipe)
     findTypes(
         @Body() getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
-    ): Promise<SupplierTypes[]> {
+    ): Promise<SupplierType[]> {
         return this.supplierService.findTypes(getSuppliersTypesFilterDto);
     }
 

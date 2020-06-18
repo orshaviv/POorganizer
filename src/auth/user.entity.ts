@@ -1,4 +1,4 @@
-import {BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {BaseEntity, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
 import * as bcrypt from 'bcryptjs';
 import {Supplier} from "../suppliers/supplier.entity";
 
@@ -6,6 +6,7 @@ import {ContactInformation} from "../contacts/contact-information.entity";
 import {Contact} from "../contacts/contact.entity";
 import {Item} from "../items/item.entity";
 import {PurchaseOrder} from "../purchaseorder/purchaseorder.entity";
+import {UserPreferences} from "../user-preferences/user-preferences.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -47,6 +48,13 @@ export class User extends BaseEntity {
 
     @OneToMany(type => ContactInformation, contactInformation => contactInformation.user, { eager: true })
     contactsInformation: ContactInformation[];
+
+    @OneToOne(type => UserPreferences, { eager: true })
+    @JoinColumn()
+    userPreferences: UserPreferences;
+
+    @Column()
+    userPreferencesId: number;
 
     async validatePassword(password: string): Promise<boolean> {
         const hash = await bcrypt.hash(password, this.salt);

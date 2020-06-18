@@ -7,6 +7,8 @@ import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
 import {JwtStrategy} from "./jwt.strategy";
 import * as config from 'config';
+import {UserPreferencesRepository} from "../user-preferences/user-preferences.repository";
+import {UserPreferencesService} from "../user-preferences/user-preferences.service";
 
 const jwtConfig = config.get('jwt');
 
@@ -19,12 +21,16 @@ const jwtConfig = config.get('jwt');
               expiresIn: jwtConfig.expiresIn,
           },
       }),
-      TypeOrmModule.forFeature([UserRepository]),
+      TypeOrmModule.forFeature([
+          UserRepository,
+          UserPreferencesRepository,
+      ]),
   ],
   controllers: [AuthController],
   providers: [
       AuthService,
       JwtStrategy,
+      UserPreferencesService,
   ],
   exports: [
       JwtStrategy,
