@@ -34,7 +34,7 @@ import {UserPreferencesRepository} from "../user-preferences/user-preferences.re
         ItemService
     ],
     controllers: [PurchaseOrderController],
-    exports: [],
+    exports: [PurchaseOrderService],
 })
 
 export class PurchaseOrderModule {}

@@ -45,7 +45,8 @@ export class PurchaseOrderService {
     }
 
     getPurchaseOrderById(
-        id: number, user: User
+        id: number,
+        user: User
     ): Promise<PurchaseOrder> {
         return this.purchaseOrderRepo.findOne({ id, userId: user.id });
     }

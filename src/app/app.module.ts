@@ -7,6 +7,7 @@ import {ContactModule} from "../contacts/contact.module";
 import {ItemModule} from "../items/item.module";
 import {PurchaseOrderModule} from "../purchaseorder/purchaseorder.module";
 import {UserPreferencesModule} from "../user-preferences/user-preferences.module";
+import {GeneratePdfModule} from "../generate-pdf/generate-pdf.module";
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import {UserPreferencesModule} from "../user-preferences/user-preferences.module
         ContactModule,
         ItemModule,
         PurchaseOrderModule,
+        GeneratePdfModule,
     ],
     controllers: [],
     providers: [],
