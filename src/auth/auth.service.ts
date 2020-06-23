@@ -5,6 +5,7 @@ import {AuthCredentialsDto} from "./dto/auth-credentials.dto";
 import {JwtService} from "@nestjs/jwt";
 import {UserPreferencesService} from "../user-preferences/user-preferences.service";
 import {UserPreferencesDto} from "../user-preferences/dto/user-preferences.dto";
+import {UserLogoDto} from "../user-preferences/dto/user-logo.dto";
 
 @Injectable()
 export class AuthService {
@@ -18,10 +19,11 @@ export class AuthService {
     ) {}
 
     async signUp(
+        useLogoDto: UserLogoDto,
         userPreferencesDto: UserPreferencesDto,
         authCredentialsDto: AuthCredentialsDto
     ): Promise<void> {
-        const userPreferences = await this.userPreferencesService.createUserPreferences(userPreferencesDto);
+        const userPreferences = await this.userPreferencesService.createUserPreferences(userPreferencesDto, useLogoDto);
 
         return await this.userRepository.signUp(userPreferences, authCredentialsDto);
     }

@@ -23,11 +23,13 @@ import {Item} from "../items/item.entity";
 import {ItemDto} from "../items/dto/item-dto";
 import {UpdatePurchaseOrderDto} from "./dto/update-purchase-order.dto";
 
+import {docDesign, fonts} from "./document-design";
+
 @Injectable()
 export class PurchaseOrderService {
     private logger = new Logger('PurchaseOrderService');
 
-    private defaultTaxValue = 0.17;
+    private defaultTaxValue = 17;
 
     constructor(
         @InjectRepository(PurchaseOrderRepository)
@@ -144,6 +146,21 @@ export class PurchaseOrderService {
 
         delete purchaseOrder.user;
         return purchaseOrder;
+    }
+
+    async generatePdf(
+        purchaseOrder: PurchaseOrder,
+        user: User,
+    ): Promise<any> {
+        const PdfPrinter = require('pdfmake');
+        const printer = new PdfPrinter(fonts);
+
+        const headerLogo = user.userPreferences.headerLogo || '';
+        const footerLogo = user.userPreferences.footerLogo || '';
+
+        const docDefinition = docDesign(purchaseOrder, headerLogo, footerLogo);
+
+        return await printer.createPdfKitDocument(docDefinition, {});
     }
 
     private async getOrCreateSupplierFromSupplierRepository(

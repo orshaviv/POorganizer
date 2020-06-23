@@ -2,12 +2,12 @@ import {
     BadRequestException,
     Body,
     Controller,
-    Get,
+    Get, Header, HttpCode,
     Logger,
     NotFoundException,
     ParseIntPipe,
     Patch,
-    Post,
+    Post, Res,
     UseGuards,
     ValidationPipe
 } from "@nestjs/common";
@@ -57,5 +57,27 @@ export class PurchaseOrderController {
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
         return this.purchaseOrderService.updatePurchaseOrderStatus(updatePurchaseOrderDto, user);
+    }
+
+    @Get('generatepdf')
+    @HttpCode(201)
+    async generatePdf(
+        @Body('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Res() res
+    ): Promise<void> {
+        const po = await this.purchaseOrderService.getPurchaseOrderById(id, user);
+        if (!po)
+            throw new NotFoundException('Purchase order with ID ${ id } not found.')
+
+        const doc = await this.purchaseOrderService.generatePdf(po, user);
+
+        const fileName = `PO-${ po.poId }.pdf`;
+
+        res.setHeader('Content-Disposition', 'attachment;filename=' + fileName);
+        res.setHeader('Content-Type', 'application/pdf');
+
+        doc.pipe(res);
+        doc.end();
     }
 }

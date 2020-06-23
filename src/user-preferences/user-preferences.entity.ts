@@ -1,6 +1,5 @@
-import {BaseEntity, Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn} from "typeorm";
-import {User} from "../auth/user.entity";
-
+import {BaseEntity, Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {MaxLength} from "class-validator";
 
 @Entity()
 export class UserPreferences extends BaseEntity {
@@ -21,4 +20,10 @@ export class UserPreferences extends BaseEntity {
 
     @Column({ unique: true, nullable: true })
     public companyWebsite: string;
+
+    @Column( 'mediumtext', { nullable: true })
+    public headerLogo: string;
+
+    @Column( 'mediumtext', { nullable: true })
+    public footerLogo: string;
 }
