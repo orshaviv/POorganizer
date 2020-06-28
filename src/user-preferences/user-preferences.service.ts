@@ -29,5 +29,4 @@ export class UserPreferencesService {
     ): Promise<UserPreferences> {
         return this.userPreferencesRepo.createOrUpdateUserPreferences(userPreferencesDto, userLogoDto, user);
     }
-
 }

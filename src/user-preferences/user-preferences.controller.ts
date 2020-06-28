@@ -3,7 +3,6 @@ import {
     Controller,
     Logger,
     Patch,
-    Post,
     UploadedFiles,
     UseGuards,
     UseInterceptors,
@@ -15,8 +14,9 @@ import {UserPreferencesDto} from "./dto/user-preferences.dto";
 import {GetUser} from "../auth/get-user.decorator";
 import {User} from "../auth/user.entity";
 import {UserPreferences} from "./user-preferences.entity";
-import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
+import {FileFieldsInterceptor} from "@nestjs/platform-express";
 import {UserLogoDto} from "./dto/user-logo.dto";
+import {userImageFileFilter} from "./user-image-file-filter";
 
 @Controller('userpreferences')
 @UseGuards(AuthGuard())
@@ -31,20 +31,13 @@ export class UserPreferencesController {
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'headerLogo', maxCount: 1 },
         { name: 'footerLogo', maxCount: 1 }
-    ]))
+    ],{ fileFilter: userImageFileFilter }))
     updateUserPreferences(
-        @UploadedFiles() files,
+        @UploadedFiles() userLogoDto: UserLogoDto,
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto,
         @GetUser() user: User,
     ): Promise<UserPreferences> {
-        let userLogoDto = new UserLogoDto();
-        if (files) {
-            if (files.headerLogo)
-                userLogoDto.headerLogo = files.headerLogo[0];
-            if (files.footerLogo)
-                userLogoDto.footerLogo = files.footerLogo[0];
-        }
-
+        UserLogoDto.validateData(userLogoDto);
         return this.userPreferencesService.updateUserPreferences(userPreferencesDto, userLogoDto, user);
     }
 }

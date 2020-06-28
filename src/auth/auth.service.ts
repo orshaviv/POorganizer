@@ -19,11 +19,11 @@ export class AuthService {
     ) {}
 
     async signUp(
-        useLogoDto: UserLogoDto,
+        userLogoDto: UserLogoDto,
         userPreferencesDto: UserPreferencesDto,
         authCredentialsDto: AuthCredentialsDto
     ): Promise<void> {
-        const userPreferences = await this.userPreferencesService.createUserPreferences(userPreferencesDto, useLogoDto);
+        const userPreferences = await this.userPreferencesService.createUserPreferences(userPreferencesDto, userLogoDto);
 
         return await this.userRepository.signUp(userPreferences, authCredentialsDto);
     }

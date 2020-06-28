@@ -4,6 +4,9 @@ import {AuthService} from "./auth.service";
 import {UserPreferencesDto} from "../user-preferences/dto/user-preferences.dto";
 import {FileFieldsInterceptor} from "@nestjs/platform-express";
 import {UserLogoDto} from "../user-preferences/dto/user-logo.dto";
+import {userImageFileFilter} from "../user-preferences/user-image-file-filter";
+
+const whiteSquareBase64Url = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 
 @Controller('auth')
 export class AuthController {
@@ -15,19 +18,13 @@ export class AuthController {
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'headerLogo', maxCount: 1 },
         { name: 'footerLogo', maxCount: 1 }
-    ]))
+    ],{ fileFilter: userImageFileFilter }))
     signUp(
-        @UploadedFiles() files,
+        @UploadedFiles() userLogoDto: UserLogoDto,
         @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto
     ): Promise<void> {
-        let userLogoDto = new UserLogoDto();
-        if (files) {
-            if (files.headerLogo)
-                userLogoDto.headerLogo = files.headerLogo[0];
-            if (files.footerLogo)
-                userLogoDto.footerLogo = files.footerLogo[0];
-        }
+        UserLogoDto.validateData(userLogoDto);
         return this.authService.signUp(userLogoDto, userPreferencesDto, authCredentialsDto);
     }
 

@@ -9,32 +9,6 @@ import {UserLogoDto} from "./dto/user-logo.dto";
 export class UserPreferencesRepository extends Repository<UserPreferences> {
     private logger = new Logger('UserPreferencesRepository');
 
-    /*
-    async createUserPreferences(
-        userPreferencesDto: UserPreferencesDto,
-        userLogoDto: UserLogoDto,
-    ): Promise<UserPreferences> {
-        const { companyName, companyCode, companyAddress, companyEmail, companyWebsite } = userPreferencesDto;
-
-        const userPreferences = new UserPreferences();
-        userPreferences.companyName = companyName;
-        userPreferences.companyCode = companyCode;
-        userPreferences.companyAddress = companyAddress;
-        userPreferences.companyEmail = companyEmail;
-        userPreferences.companyWebsite = companyWebsite;
-
-        const { headerLogo, footerLogo } = userLogoDto;
-        if (headerLogo)
-            userPreferences.headerLogo = this.convertFileToBase64(headerLogo);
-        if (footerLogo)
-            userPreferences.headerLogo = this.convertFileToBase64(footerLogo);
-
-        await userPreferences.save();
-
-        return userPreferences;
-    }
-    */
-
     async createOrUpdateUserPreferences(
         userPreferencesDto: UserPreferencesDto,
         userLogoDto: UserLogoDto,
@@ -75,6 +49,6 @@ export class UserPreferencesRepository extends Repository<UserPreferences> {
     }
 
     convertFileToBase64 (file: any): string {
-        return `data:image/png;base64,${ file.buffer.toString('base64') }`;
+        return `data:${ file.mimetype };base64,${ file.buffer.toString('base64') }`;
     }
 }
