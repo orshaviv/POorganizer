@@ -1,11 +1,10 @@
 import {
     Body,
     Controller,
-    Get,
     Logger,
     Patch,
-    Post, Res,
-    UploadedFile, UploadedFiles,
+    Post,
+    UploadedFiles,
     UseGuards,
     UseInterceptors,
     ValidationPipe
@@ -19,7 +18,6 @@ import {UserPreferences} from "./user-preferences.entity";
 import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {UserLogoDto} from "./dto/user-logo.dto";
 
-
 @Controller('userpreferences')
 @UseGuards(AuthGuard())
 export class UserPreferencesController {
@@ -28,23 +26,6 @@ export class UserPreferencesController {
     constructor(
         private readonly userPreferencesService: UserPreferencesService,
     ) {}
-
-    @Post('create')
-    @UseInterceptors(FileFieldsInterceptor([
-        { name: 'headerLogo', maxCount: 1 },
-        { name: 'footerLogo', maxCount: 1 }
-    ]))
-    createUserPreferences(
-        @UploadedFiles() files,
-        @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto,
-        @GetUser() user: User,
-    ): Promise<UserPreferences> {
-        let userLogoDto = new UserLogoDto();
-        userLogoDto.headerLogo = files.headerLogo;
-        userLogoDto.footerLogo = files.footerLogo;
-
-        return this.userPreferencesService.createUserPreferences(userPreferencesDto, userLogoDto);
-    }
 
     @Patch('update')
     @UseInterceptors(FileFieldsInterceptor([
@@ -57,8 +38,12 @@ export class UserPreferencesController {
         @GetUser() user: User,
     ): Promise<UserPreferences> {
         let userLogoDto = new UserLogoDto();
-        userLogoDto.headerLogo = files.headerLogo[0];
-        userLogoDto.footerLogo = files.footerLogo[0];
+        if (files) {
+            if (files.headerLogo)
+                userLogoDto.headerLogo = files.headerLogo[0];
+            if (files.footerLogo)
+                userLogoDto.footerLogo = files.footerLogo[0];
+        }
 
         return this.userPreferencesService.updateUserPreferences(userPreferencesDto, userLogoDto, user);
     }

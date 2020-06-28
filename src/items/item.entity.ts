@@ -3,15 +3,10 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinTable,
-    ManyToMany,
     ManyToOne,
-    OneToMany,
     PrimaryGeneratedColumn
 } from "typeorm";
 import {User} from "../auth/user.entity";
-import {SupplierType} from "../suppliers/supplier-type.entity";
-
 
 @Entity({name: 'item'})
 export class Item extends BaseEntity {

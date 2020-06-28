@@ -18,7 +18,7 @@ export class PurchaseOrderDto {
     @IsISO8601()
     public completionDate: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     public supplierName: string;
 
@@ -26,7 +26,7 @@ export class PurchaseOrderDto {
     @IsNumber()
     public supplierId: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     public contactFirstName: string;
 

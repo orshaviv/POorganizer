@@ -9,6 +9,7 @@ import {UserLogoDto} from "./dto/user-logo.dto";
 export class UserPreferencesRepository extends Repository<UserPreferences> {
     private logger = new Logger('UserPreferencesRepository');
 
+    /*
     async createUserPreferences(
         userPreferencesDto: UserPreferencesDto,
         userLogoDto: UserLogoDto,
@@ -32,13 +33,23 @@ export class UserPreferencesRepository extends Repository<UserPreferences> {
 
         return userPreferences;
     }
+    */
 
-    async updateUserPreferences(
+    async createOrUpdateUserPreferences(
         userPreferencesDto: UserPreferencesDto,
         userLogoDto: UserLogoDto,
         user: User
     ): Promise<UserPreferences> {
-        const userPreferences = await user.userPreferences;
+        let userPreferences: UserPreferences = null;
+
+        if (user)
+            userPreferences = await user.userPreferences;
+
+        if (!userPreferences){
+            this.logger.verbose('creating new user preferences.')
+            userPreferences = new UserPreferences();
+        }
+
         const { companyName, companyCode, companyAddress, companyEmail, companyWebsite } = userPreferencesDto;
 
         if (companyName)

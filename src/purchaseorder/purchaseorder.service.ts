@@ -41,15 +41,21 @@ export class PurchaseOrderService {
     ) {}
 
     getPurchaseOrders(
+        search: string,
         user: User,
     ): Promise<PurchaseOrder[]> {
-        return this.purchaseOrderRepo.getPurchaseOrders(user);
+        return this.purchaseOrderRepo.getPurchaseOrders(search, user);
     }
 
-    getPurchaseOrderById(
+    async getPurchaseOrderById(
         id: number, user: User
     ): Promise<PurchaseOrder> {
-        return this.purchaseOrderRepo.findOne({ id, userId: user.id });
+        try {
+            return await this.purchaseOrderRepo.findOne({id, userId: user.id});
+        } catch (error) {
+            this.logger.error(`Failed to get supplier with ID ${ id } for user ${user.firstName} ${user.lastName}.`, error.stack);
+            throw new InternalServerErrorException(error);
+        }
     }
 
     async createPurchaseOrder(
@@ -58,32 +64,25 @@ export class PurchaseOrderService {
     ): Promise<PurchaseOrder> {
         let purchaseOrder = new PurchaseOrder();
 
-        const supplier = await this.getOrCreateSupplierFromSupplierRepository(purchaseOrderDto, user);
+        const { supplierId, supplierName } = purchaseOrderDto;
+        const supplierDTO = new SupplierDTO();
+        supplierDTO.id = supplierId;
+        supplierDTO.name = supplierName
+        const supplier = await this.supplierService.getOrCreateSupplier(supplierDTO, user);
         purchaseOrder.supplierName = supplier.name;
 
-        const contact = await this.getOrCreateContactFromContactRepository(purchaseOrderDto, supplier, user);
+        const { contactId, contactFirstName, contactLastName } = purchaseOrderDto;
+        const contactDTO = new ContactDTO();
+        contactDTO.contact_id = contactId;
+        contactDTO.first_name = contactFirstName;
+        contactDTO.last_name = contactLastName;
+        const contact = await this.contactService.getOrCreateContact(contactDTO, supplier, user);
         purchaseOrder.contactName = contact.first_name + ' ' + contact.last_name;
 
         const { catalogNumbers, itemsId, quantities, details, itemsCost } = purchaseOrderDto;
 
-        const itemsListLength = itemsId? itemsId.length : catalogNumbers.length;
+        const itemsList = await this.makeItemsList(catalogNumbers, itemsId, quantities, details, itemsCost, user);
 
-        if (quantities.length != itemsListLength || details.length != itemsListLength || itemsCost.length != itemsListLength) {
-            throw new UnauthorizedException('Some of the items details are missing.');
-        }
-
-        let itemsList: Item[] = [];
-        for (let itemIndex = 0; itemIndex < itemsListLength; itemIndex++) {
-            let item: Item;
-            if (itemsId && itemsId[itemIndex]) {
-                item = await this.itemService.getItemById(itemsId[itemIndex], user);
-            }else{
-                let itemDto = new ItemDto();
-                itemDto.catalogNumber = catalogNumbers[itemIndex];
-                item = await this.itemService.createOrFindItem(itemDto, user);
-            }
-            itemsList.push(item);
-        }
         purchaseOrder.catalogNumber = itemsList.map(item => item.catalogNumber);
         purchaseOrder.quantity = quantities.map(quantity => quantity.toString());
         purchaseOrder.details = details;
@@ -142,6 +141,17 @@ export class PurchaseOrderService {
         if (completionDate)
             purchaseOrder.completionDate = new Date(completionDate);
 
+        const { catalogNumbers, itemsId, quantities, details, itemsCost } = updatePurchaseOrderDto;
+        if (catalogNumbers || itemsId){
+            const itemsList = await this.makeItemsList(catalogNumbers, itemsId, quantities, details, itemsCost, user);
+
+            purchaseOrder.catalogNumber = itemsList.map(item => item.catalogNumber);
+            purchaseOrder.quantity = quantities.map(quantity => quantity.toString());
+            purchaseOrder.details = details;
+            purchaseOrder.itemCost = itemsCost.map(itemCost => itemCost.toString());
+            purchaseOrder.totalCostBeforeTax = itemsCost.reduce( (a, b) => a + b, 0);
+        }
+
         await purchaseOrder.save();
 
         delete purchaseOrder.user;
@@ -161,59 +171,6 @@ export class PurchaseOrderService {
         const docDefinition = docDesign(purchaseOrder, headerLogo, footerLogo);
 
         return await printer.createPdfKitDocument(docDefinition, {});
-    }
-
-    private async getOrCreateSupplierFromSupplierRepository(
-        purchaseOrderDto: PurchaseOrderDto,
-        user: User
-    ): Promise<Supplier> {
-        const { supplierId, supplierName } = purchaseOrderDto;
-
-        let supplier: Supplier;
-
-        if (supplierId) {
-            this.logger.log('Find supplier by ID.');
-            supplier = await this.supplierService.getSupplierById(supplierId, user);
-        }
-
-        if (!supplier){
-            this.logger.log('Find supplier by name.');
-            supplier = await this.supplierService.getSupplierByName(supplierName, user);
-        }
-
-        if (!supplier) {
-            this.logger.log('Creating new supplier.');
-            let supplierDto = new SupplierDTO();
-            supplierDto.name = supplierName;
-            supplier = await this.supplierService.addNewSupplier(supplierDto, user);
-        }
-
-        return supplier;
-    }
-
-    private async getOrCreateContactFromContactRepository(
-        purchaseOrderDto: PurchaseOrderDto,
-        supplier: Supplier,
-        user: User
-    ): Promise<Contact> {
-        const { contactId, contactFirstName, contactLastName } = purchaseOrderDto;
-
-        let contact: Contact;
-        if (contactId) {
-            contact = await this.contactService.getContactById(contactId, user);
-        }else{
-            try{
-                contact = await this.contactService.getContactByName(contactFirstName, contactLastName, user);
-            }catch(error){
-                this.logger.error(error);
-                let contactDto = new ContactDTO();
-                contactDto.first_name = contactFirstName;
-                contactDto.last_name = contactLastName;
-                contact = await this.contactService.addContact(contactDto, supplier, user);
-            }
-        }
-
-        return contact;
     }
 
     private async createPoId (user: User): Promise<string> {
@@ -263,5 +220,35 @@ export class PurchaseOrderService {
             return PaymentStatus.PENDING;
         }
         throw new BadRequestException('Payment method is not valid');
+    }
+
+    private async makeItemsList(
+        catalogNumbers: string[],
+        itemsId: number[],
+        quantities: number[],
+        details: string[],
+        itemsCost: number[],
+        user: User,
+    ): Promise<Item[]> {
+        const itemsListLength = itemsId? itemsId.length : catalogNumbers.length;
+
+        if (quantities.length != itemsListLength || details.length != itemsListLength || itemsCost.length != itemsListLength) {
+            throw new UnauthorizedException('Some of the items details are missing.');
+        }
+
+        let itemsList: Item[] = [];
+        for (let itemIndex = 0; itemIndex < itemsListLength; itemIndex++) {
+            let item: Item;
+            if (itemsId && itemsId[itemIndex]) {
+                item = await this.itemService.getItemById(itemsId[itemIndex], user);
+            }else{
+                let itemDto = new ItemDto();
+                itemDto.catalogNumber = catalogNumbers[itemIndex];
+                item = await this.itemService.createOrFindItem(itemDto, user);
+            }
+            itemsList.push(item);
+        }
+
+        return itemsList;
     }
 }

@@ -17,20 +17,15 @@ export class SupplierRepository extends Repository<Supplier> {
     private logger = new Logger('SupplierRepository');
 
     async getSuppliers(
-        filterDto: GetSuppliersFilterDto,
+        search: string,
         user: User
     ): Promise<Supplier[]> {
-        const {id, search} = filterDto;
         const query = this.createQueryBuilder('supplier')
             .leftJoinAndSelect('supplier.types','types')
             .leftJoinAndSelect('supplier.contacts','contacts')
             .leftJoinAndSelect('contacts.contactInformation','contactInformation');
 
         query.where('supplier.userId = :userId', { userId: user.id });
-
-        if (id) {
-            query.andWhere('supplier.id = :id', { id });
-        }
 
         if (search) {
             query.andWhere(
@@ -54,12 +49,12 @@ export class SupplierRepository extends Repository<Supplier> {
             const suppliers = await query.getMany();
             return suppliers;
         } catch (error) {
-            this.logger.error(`Failed to get suppliers for user ${user.firstName} ${user.lastName}. Filters: ${JSON.stringify(filterDto)}`, error.stack);
+            this.logger.error(`Failed to get suppliers for user ${user.firstName} ${user.lastName}. Filters: ${ search }`, error.stack);
             throw new InternalServerErrorException();
         }
     }
 
-    async addNewSupplier(
+    async addSupplier(
         supplierDto: SupplierDTO,
         supplierTypes: SupplierType[],
         user: User

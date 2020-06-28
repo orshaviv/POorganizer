@@ -4,10 +4,10 @@ import {
     Controller,
     Get, Header, HttpCode,
     Logger,
-    NotFoundException,
+    NotFoundException, Param,
     ParseIntPipe,
     Patch,
-    Post, Res,
+    Post, Query, Res,
     UseGuards,
     ValidationPipe
 } from "@nestjs/common";
@@ -30,14 +30,15 @@ export class PurchaseOrderController {
 
     @Get()
     getPurchaseOrders(
+        @Query('search') search: string,
         @GetUser() user: User,
     ): Promise<PurchaseOrder[]> {
-        return this.purchaseOrderService.getPurchaseOrders(user);
+        return this.purchaseOrderService.getPurchaseOrders(search, user);
     }
 
-    @Get('id')
+    @Get('id/:id')
     getPurchaseOrderById(
-        @Body('id', ParseIntPipe) id: number,
+        @Param('id', ParseIntPipe) id: number,
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
         return this.purchaseOrderService.getPurchaseOrderById(id, user);
@@ -51,18 +52,20 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.createPurchaseOrder(purchaseOrderDto, user);
     }
 
-    @Patch('update')
+    @Patch('id/:id/update')
     updatePurchaseOrderStatus(
+        @Param('id', ParseIntPipe) id: number,
         @Body(ValidationPipe) updatePurchaseOrderDto: UpdatePurchaseOrderDto,
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
+        updatePurchaseOrderDto.id = id;
         return this.purchaseOrderService.updatePurchaseOrderStatus(updatePurchaseOrderDto, user);
     }
 
-    @Get('generatepdf')
+    @Get('/id/:id/generatepdf')
     @HttpCode(201)
     async generatePdf(
-        @Body('id', ParseIntPipe) id: number,
+        @Param('id', ParseIntPipe) id: number,
         @GetUser() user: User,
         @Res() res
     ): Promise<void> {

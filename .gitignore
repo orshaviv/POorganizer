@@ -11,3 +11,5 @@ config/*
 *.log
 
 #Files
+app.yaml
+.gcloudignore

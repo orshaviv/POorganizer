@@ -6,22 +6,18 @@ import {
     Delete,
     ValidationPipe,
     UsePipes,
-    BadRequestException,
     Patch,
     ParseIntPipe,
     UseGuards,
     Logger,
-    NotFoundException
+    NotFoundException, Param, Query
 } from "@nestjs/common";
 import {SupplierService} from "./supplier.service";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {Supplier} from "./supplier.entity";
-import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {AuthGuard} from "@nestjs/passport";
 import {GetUser} from "../auth/get-user.decorator";
 import {User} from "../auth/user.entity";
-import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
-import {IsNotEmpty} from "class-validator";
 import {ContactService} from "../contacts/contact.service";
 import {ContactDTO} from "../contacts/dto/contact.dto";
 import {Contact} from "../contacts/contact.entity";
@@ -38,16 +34,16 @@ export class SupplierController {
 
     @Get()
     getSuppliers(
-        @Body(ValidationPipe) filterDto: GetSuppliersFilterDto,
+        @Query('search') search: string,
         @GetUser() user: User,
     ): Promise<Supplier[]> {
-        this.logger.verbose(`User ${user.firstName} ${user.lastName} retrieving suppliers. Filters: ${JSON.stringify(filterDto)}.`);
-        return this.supplierService.getSuppliers(filterDto, user);
+        this.logger.verbose(`User ${user.firstName} ${user.lastName} retrieving suppliers.`);
+        return this.supplierService.getSuppliers(search, user);
     }
 
-    @Get('id')
+    @Get('id/:id')
     getSupplierById(
-        @Body('id', ParseIntPipe) id: number,
+        @Param('id', ParseIntPipe) id: number,
         @GetUser() user: User
     ): Promise<Supplier> {
         return this.supplierService.getSupplierById(id, user);
@@ -55,59 +51,70 @@ export class SupplierController {
 
     @Get('name')
     getSupplierByName(
-        @Body('name') name: string,
+        @Query('name') name: string,
         @GetUser() user: User
     ): Promise<Supplier> {
+        this.logger.verbose(`User ${user.firstName} ${user.lastName} retrieving supplier name ${ name }.`);
         return this.supplierService.getSupplierByName(name, user);
     }
 
     @Post('add')
     @UsePipes(ValidationPipe)
-    addNewSupplier(
+    addSupplier(
         @Body() supplierDTO: SupplierDTO,
         @GetUser() user: User,
     ): Promise<Supplier> {
-        return this.supplierService.addNewSupplier(supplierDTO, user);
+        return this.supplierService.addSupplier(supplierDTO, user);
     }
 
-    @Delete('remove')
+    @Delete('id/:id/remove')
     @UsePipes(ValidationPipe)
     removeSupplier(
-        @Body('id', ParseIntPipe) id: number,
+        @Param('id', ParseIntPipe) id: number,
         @GetUser() user: User,
     ): Promise<void> {
         return this.supplierService.removeSupplier(id, user);
     }
 
-    @Patch('/update')
+    @Patch('id/:id/update')
     @UsePipes(ValidationPipe)
     updateSupplier(
+        @Param('id', ParseIntPipe) id: number,
         @Body() supplierDto: SupplierDTO,
         @GetUser() user: User,
     ): Promise<Supplier> {
-        return this.supplierService.updateSupplier(supplierDto, user);
+        return this.supplierService.updateSupplier(id, supplierDto, user);
     }
 
-    @Get('suppliertypes')
+    @Get('types/id/:id')
     @UsePipes(ValidationPipe)
-    findTypes(
-        @Body() getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
+    getTypeById(
+        @Param('id') id: number,
+    ): Promise<SupplierType> {
+        return this.supplierService.getTypeById(id);
+    }
+
+    @Get('types')
+    @UsePipes(ValidationPipe)
+    getTypes(
+        @Query('search') search: string,
     ): Promise<SupplierType[]> {
-        return this.supplierService.findTypes(getSuppliersTypesFilterDto);
+        return this.supplierService.getTypes(search);
     }
 
-    @Post('addcontact')
+    @Post('id/:id/contact/add')
     @UsePipes(ValidationPipe)
-    async addNewContact(
+    async addContact(
+        @Param('id', ParseIntPipe) id: number,
         @Body() contactDto: ContactDTO,
-        @Body('id', ParseIntPipe) id: number,
         @GetUser() user: User,
     ): Promise<Contact>{
         const supplier = await this.supplierService.getSupplierById(id, user);
 
         if (!supplier) {
-            throw new NotFoundException(`Supplier with ID ${id} not found.`);
+            throw new NotFoundException(`Supplier with ID ${ id } not found.`);
         }
+
         return await this.contactService.addContact(contactDto, supplier, user);
     }
 

@@ -3,6 +3,7 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {AuthModule} from "../auth/auth.module";
 import {ItemRepository} from "./item.repository";
 import {ItemService} from "./item.service";
+import {ItemController} from "./item.controller";
 
 @Module({
     imports: [
@@ -12,7 +13,7 @@ import {ItemService} from "./item.service";
         AuthModule
     ],
     providers: [ItemService],
-    controllers: [],
+    controllers: [ItemController],
     exports: [ItemService]
 })
 

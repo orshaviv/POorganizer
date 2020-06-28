@@ -19,7 +19,7 @@ export class UserPreferencesService {
         userPreferencesDto: UserPreferencesDto,
         userLogoDto: UserLogoDto,
     ): Promise<UserPreferences> {
-        return this.userPreferencesRepo.createUserPreferences(userPreferencesDto, userLogoDto);
+        return this.userPreferencesRepo.createOrUpdateUserPreferences(userPreferencesDto, userLogoDto, null);
     }
 
     updateUserPreferences(
@@ -27,7 +27,7 @@ export class UserPreferencesService {
         userLogoDto: UserLogoDto,
         user: User
     ): Promise<UserPreferences> {
-        return this.userPreferencesRepo.updateUserPreferences(userPreferencesDto, userLogoDto, user);
+        return this.userPreferencesRepo.createOrUpdateUserPreferences(userPreferencesDto, userLogoDto, user);
     }
 
 }

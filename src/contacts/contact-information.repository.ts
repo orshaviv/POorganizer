@@ -1,8 +1,6 @@
 import {EntityRepository, Repository} from "typeorm";
 import {ContactInformation} from "./contact-information.entity";
-import {GetContactInformationFilterDto} from "./dto/get-contact-information-filter.dto";
 import {
-    BadRequestException,
     ConflictException,
     Injectable,
     InternalServerErrorException,
@@ -11,49 +9,13 @@ import {
 } from "@nestjs/common";
 import {User} from "../auth/user.entity";
 import {ContactInformationDto} from "./dto/contact-information.dto";
-import {InjectRepository} from "@nestjs/typeorm";
-import {ContactRepository} from "./contact.repository";
 import {Contact} from "./contact.entity";
-import {filter} from "rxjs/operators";
+
 
 @Injectable()
 @EntityRepository(ContactInformation)
 export class ContactInformationRepository extends Repository<ContactInformation> {
     private logger = new Logger('ContactInformationRepository');
-
-    async getContactInformation(
-        filterDto: GetContactInformationFilterDto,
-        user: User
-    ): Promise<ContactInformation[]> {
-        const {id, search, contactId} = filterDto;
-        const query = this.createQueryBuilder('contact_information');
-
-        query.where('contact_information.userId = :userId', {userId: user.id});
-
-        if (id) {
-            query.andWhere('contact_information.id = :id', { id });
-        }
-
-        if (search) {
-            query.andWhere(
-                'contact_information.locale LIKE :search OR ' +
-                'contact_information.cellphoneNumber LIKE :search OR ' +
-                'contact_information.phoneNumber LIKE :search OR ', {search: `%${search}%`}
-            );
-        }
-
-        if (contactId) {
-            query.andWhere('contact_information.contactId = :contactId', { contactId });
-        }
-
-        try {
-            const contacts = await query.getMany();
-            return contacts;
-        } catch (error) {
-            this.logger.error(`Failed to get contacts information for user ${user.firstName} ${user.lastName}. Filters: ${JSON.stringify(filterDto)}`, error.stack);
-            throw new InternalServerErrorException();
-        }
-    }
 
     async addContactInformation(
         contactInformationDto: ContactInformationDto,
@@ -88,11 +50,13 @@ export class ContactInformationRepository extends Repository<ContactInformation>
 
     async removeContactInformation(
         id: number,
+        contactId: number,
         user: User
     ): Promise<void> {
-        const res = await this.delete({id, userId: user.id});
+        const res = await this.delete({id, contactId, userId: user.id});
+
         if (res.affected === 0){
-            throw new NotFoundException(`Contact information with ID "${ id }" not found.`);
+            throw new NotFoundException(`Contact information with ID ${ id } for contact with ID ${ contactId } not found.`);
         }
     }
 }

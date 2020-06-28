@@ -22,9 +22,12 @@ export class AuthController {
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto
     ): Promise<void> {
         let userLogoDto = new UserLogoDto();
-        userLogoDto.headerLogo = files.headerLogo[0];
-        userLogoDto.footerLogo = files.footerLogo[0];
-
+        if (files) {
+            if (files.headerLogo)
+                userLogoDto.headerLogo = files.headerLogo[0];
+            if (files.footerLogo)
+                userLogoDto.footerLogo = files.footerLogo[0];
+        }
         return this.authService.signUp(userLogoDto, userPreferencesDto, authCredentialsDto);
     }
 

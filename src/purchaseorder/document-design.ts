@@ -102,7 +102,7 @@ export function docDesign (purchaseOrder: PurchaseOrder, headerLogo, footerLogo)
             margin: 5
         }, {},
         {
-            text: `${ itemTotalCost.reduce( (a,b) => a+b, 0) * taxPercentage/100 } ${ currency }`,
+            text: `${ (itemTotalCost.reduce( (a,b) => a+b, 0) * taxPercentage/100).toFixed(1) } ${ currency }`,
             style: 'tableStyle',
             alignment: 'center',
             margin: 5
@@ -123,7 +123,7 @@ export function docDesign (purchaseOrder: PurchaseOrder, headerLogo, footerLogo)
             margin: 5
         }, {},
         {
-            text: `${ itemTotalCost.reduce( (a,b) => a+b, 0) * (1 + taxPercentage/100) } ${ currency }`,
+            text: `${ (itemTotalCost.reduce( (a,b) => a+b, 0) * (1 + taxPercentage/100)).toFixed(1) } ${ currency }`,
             style: 'tableStyle',
             fillColor: tableFillColor,
             alignment: 'center',
@@ -235,7 +235,7 @@ export function docDesign (purchaseOrder: PurchaseOrder, headerLogo, footerLogo)
                                 return 25;
                             },
                     headerRows: 2,
-                    widths: [ 15, 50, 50, '*', 'auto', 'auto'],
+                    widths: [ 15, 50, 'auto', '*', 'auto', 'auto'],
                     dontBreakRows: true,
                     keepWithHeaderRows: 1,
                     body: itemsTablerows,

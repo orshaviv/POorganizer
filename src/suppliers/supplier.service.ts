@@ -1,13 +1,12 @@
-import {Injectable, Logger, NotFoundException} from "@nestjs/common";
+import {BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException} from "@nestjs/common";
 import {Supplier} from "./supplier.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {SupplierDTO} from "./dto/supplier.dto";
-import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierRepository} from "./supplier.repository";
 import {User} from "../auth/user.entity";
 import {SupplierTypeRepository} from "./supplier-type.repository";
 import {SupplierType} from "./supplier-type.entity";
-import {GetSuppliersTypesFilterDto} from "./dto/get-suppliers-types-filter.dto";
+import {PurchaseOrderDto} from "../purchaseorder/dto/purchase-order.dto";
 
 @Injectable()
 export class SupplierService {
@@ -21,10 +20,10 @@ export class SupplierService {
     ) {}
 
     getSuppliers(
-        filterDto: GetSuppliersFilterDto,
+        search: string,
         user: User
     ): Promise<Supplier[]> {
-        return this.suppliersRepo.getSuppliers(filterDto, user);
+        return this.suppliersRepo.getSuppliers(search, user);
     }
 
     async getSupplierById(
@@ -47,7 +46,7 @@ export class SupplierService {
         return supplier;
     }
 
-    async addNewSupplier(
+    async addSupplier(
         supplierDto: SupplierDTO,
         user: User
     ): Promise<Supplier> {
@@ -55,7 +54,7 @@ export class SupplierService {
         if(supplierDto.types){
             supplierTypes = await this.supplierTypeRepository.createOrFindSupplierType(supplierDto.types);
         }
-        return await this.suppliersRepo.addNewSupplier(supplierDto, supplierTypes, user);
+        return await this.suppliersRepo.addSupplier(supplierDto, supplierTypes, user);
     }
 
     async removeSupplier(
@@ -69,6 +68,7 @@ export class SupplierService {
     }
 
     async updateSupplier(
+        id: number,
         supplierDto: SupplierDTO,
         user: User,
     ): Promise<Supplier>{
@@ -78,12 +78,55 @@ export class SupplierService {
         }else{
             supplierTypes = null;
         }
+        supplierDto.id = id;
         return await this.suppliersRepo.updateSupplier(supplierDto, supplierTypes, user);
     }
 
-    findTypes(
-        getSuppliersTypesFilterDto: GetSuppliersTypesFilterDto,
+    async getOrCreateSupplier(
+        supplierDto: SupplierDTO,
+        user: User
+    ): Promise<Supplier> {
+        const { id: supplierId, name: supplierName } = supplierDto;
+
+        if (!supplierId && !supplierName) {
+            throw new BadRequestException('Specify supplier ID or name.');
+        }
+
+        let supplier: Supplier;
+
+        if (supplierId) {
+            this.logger.log('Find supplier by ID.');
+            supplier = await this.getSupplierById(supplierId, user);
+        }
+
+        if (!supplier && supplierName){
+            this.logger.log('Find supplier by name.');
+            supplier = await this.getSupplierByName(supplierName, user);
+        }
+
+        if (!supplier && supplierName) {
+            this.logger.log('Creating new supplier.');
+            let supplierDto = new SupplierDTO();
+            supplierDto.name = supplierName;
+            supplier = await this.addSupplier(supplierDto, user);
+        }
+
+        if (!supplier) {
+            throw new InternalServerErrorException('Cannot find or create supplier.');
+        }
+
+        return supplier;
+    }
+
+    getTypes(
+        search: string
     ): Promise<SupplierType[]> {
-        return this.supplierTypeRepository.getTypes(getSuppliersTypesFilterDto);
+        return this.supplierTypeRepository.getTypes(search);
+    }
+
+    getTypeById(
+        id: number
+    ): Promise<SupplierType> {
+        return this.supplierTypeRepository.findOne({ id });
     }
 }

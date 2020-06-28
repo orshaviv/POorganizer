@@ -1,8 +1,8 @@
-import {IsISO8601, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsArray, IsISO8601, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
 import {PaymentStatus, POStatus} from "../purchaseorder.entity";
 
 export class UpdatePurchaseOrderDto {
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     public id: number;
 
@@ -29,4 +29,24 @@ export class UpdatePurchaseOrderDto {
     @IsOptional()
     @IsISO8601()
     public completionDate: string;
+
+    @IsOptional()
+    @IsArray()
+    public quantities: number[];
+
+    @IsOptional()
+    @IsArray()
+    public catalogNumbers: string[];
+
+    @IsOptional()
+    @IsArray()
+    public itemsId: number[];
+
+    @IsOptional()
+    @IsArray()
+    public details: string[];
+
+    @IsOptional()
+    @IsArray()
+    public itemsCost: number[];
 }

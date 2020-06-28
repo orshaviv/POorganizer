@@ -1,7 +1,6 @@
 import {Injectable, Logger, NotFoundException} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {ItemRepository} from "./item.repository";
-import {GetItemsFilterDto} from "./dto/get-items-filter.dto";
 import {User} from "../auth/user.entity";
 import {Item} from "./item.entity";
 import {ItemDto} from "./dto/item-dto";
@@ -15,34 +14,31 @@ export class ItemService {
     ) {}
 
     getItems(
-        filterDto: GetItemsFilterDto,
+        search: string,
         user: User
     ): Promise<Item[]> {
-        return this.itemsRepo.getItems(filterDto, user);
+        return this.itemsRepo.getItems(search, user);
     }
 
-    async getItemById(
+    getItemById(
         id: number,
         user: User
     ): Promise<Item> {
-        const item = await this.itemsRepo.getItemById(id, user);
-
-        if (!item) {
-            throw new NotFoundException(`Item with ID ${ id } not found.`)
-        }
-        return item;
+        return this.itemsRepo.findOne({ id, userId: user.id });
     }
 
-    async getItemByCatalogNumber(
+    getItemByCatalogNumber(
         catalogNumber: string,
         user: User
     ): Promise<Item> {
-        const item = await this.itemsRepo.findOne({ catalogNumber, userId: user.id });
+        return this.itemsRepo.findOne({ catalogNumber, userId: user.id });
+    }
 
-        if (!item) {
-            throw new NotFoundException(`Item with catalog number ${ catalogNumber } not found.`)
-        }
-        return item;
+    addItem(
+        itemDto: ItemDto,
+        user: User
+    ): Promise<Item> {
+        return this.itemsRepo.createOrFindItem(itemDto, user);
     }
 
     createOrFindItem(
@@ -50,5 +46,23 @@ export class ItemService {
         user: User
     ): Promise<Item> {
         return this.itemsRepo.createOrFindItem(itemDto, user);
+    }
+
+    async removeItem(
+        id: number,
+        user: User
+    ): Promise<void> {
+        const res = await this.itemsRepo.delete({ id, userId: user.id });
+
+        if (res.affected === 0) {
+            throw new NotFoundException('Item with ID ${ id } not found');
+        }
+    }
+
+    updateItem(
+        itemDto: ItemDto,
+        user: User
+    ): Promise<Item> {
+        return this.itemsRepo.updateItem(itemDto, user);
     }
 }
