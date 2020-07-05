@@ -1,5 +1,5 @@
-import {EntityRepository, Repository} from "typeorm";
-import {PurchaseOrder} from "./purchaseorder.entity";
+import {Between, EntityRepository, LessThan, Repository} from "typeorm";
+import {POStatus, PurchaseOrder} from "./purchaseorder.entity";
 import {InternalServerErrorException, Logger} from "@nestjs/common";
 import {User} from "../auth/user.entity";
 
@@ -9,6 +9,7 @@ export class PurchaseOrderRepository extends Repository<PurchaseOrder> {
 
     async getPurchaseOrders(
         search: string,
+        poStatus: POStatus,
         user: User
     ): Promise<PurchaseOrder[]> {
         const query = this.createQueryBuilder('purchaseorder');
@@ -18,7 +19,6 @@ export class PurchaseOrderRepository extends Repository<PurchaseOrder> {
         if (search) {
             query.andWhere(
                 '(purchaseorder.poId LIKE :search OR ' +
-                'purchaseorder.poStatus LIKE :search OR ' +
                 'purchaseorder.deliveryMethod LIKE :search OR ' +
                 'purchaseorder.paymentMethod LIKE :search OR ' +
                 'purchaseorder.paymentStatus LIKE :search OR ' +
@@ -27,6 +27,11 @@ export class PurchaseOrderRepository extends Repository<PurchaseOrder> {
                 'purchaseorder.contactName LIKE :search)'
                 ,{ search: `%${ search }%` }
             );
+        }
+
+        if (poStatus) {
+            query.andWhere(
+                'purchaseorder.poStatus = :poStatus',{ poStatus: poStatus })
         }
 
         try {
@@ -38,18 +43,11 @@ export class PurchaseOrderRepository extends Repository<PurchaseOrder> {
         }
     }
 
-    async getPurchaseOrdersUntilDate(
-        date: Date,
+    getPurchaseOrdersBetweenDates(
+        fromDate: Date,
+        untilDate: Date,
         user: User,
     ): Promise<PurchaseOrder[]> {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-
-        const poList = await this.getPurchaseOrders(null, user);
-
-        return poList.filter(po => {
-            let creationDate = po.created_at;
-            return (creationDate.getFullYear() <= year && creationDate.getMonth() <= month);
-        });
+        return this.find({ created_at: Between<Date>(fromDate, untilDate), userId: user.id });
     }
 }

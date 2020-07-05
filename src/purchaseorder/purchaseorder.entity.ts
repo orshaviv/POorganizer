@@ -2,15 +2,15 @@ import {BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGenerate
 import {User} from "../auth/user.entity";
 
 export enum POStatus {
-    OPEN,
-    SENT,
-    CANCELED,
+    OPEN = 'OPEN',
+    SENT = 'SENT',
+    CANCELED = 'CANCELED',
 }
 
 export enum PaymentStatus {
-    PAID,
-    REFUND,
-    PENDING
+    PAID = 'PAID',
+    REFUND = 'REFUND',
+    PENDING = 'PENDING'
 }
 
 export enum DeliveryMethod {

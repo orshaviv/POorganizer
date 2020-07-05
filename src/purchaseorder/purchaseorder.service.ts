@@ -42,9 +42,10 @@ export class PurchaseOrderService {
 
     getPurchaseOrders(
         search: string,
+        poStatus: POStatus,
         user: User,
     ): Promise<PurchaseOrder[]> {
-        return this.purchaseOrderRepo.getPurchaseOrders(search, user);
+        return this.purchaseOrderRepo.getPurchaseOrders(search, poStatus, user);
     }
 
     async getPurchaseOrderById(
@@ -56,6 +57,14 @@ export class PurchaseOrderService {
             this.logger.error(`Failed to get supplier with ID ${ id } for user ${user.firstName} ${user.lastName}.`, error.stack);
             throw new InternalServerErrorException(error);
         }
+    }
+
+    getPurchaseOrdersBetweenDates(
+        fromDate: Date,
+        untilDate: Date,
+        user: User
+    ): Promise<PurchaseOrder[]> {
+        return this.purchaseOrderRepo.getPurchaseOrdersBetweenDates(fromDate, untilDate, user);
     }
 
     async createPurchaseOrder(
@@ -119,7 +128,7 @@ export class PurchaseOrderService {
         return purchaseOrder;
     }
 
-    async updatePurchaseOrderStatus(
+    async updatePurchaseOrder(
         updatePurchaseOrderDto: UpdatePurchaseOrderDto,
         user: User
     ): Promise<PurchaseOrder> {
@@ -131,13 +140,13 @@ export class PurchaseOrderService {
             throw new NotFoundException(`PO with ID ${ id } not found.`);
 
         if (poStatus)
-            purchaseOrder.poStatus = this.updatePoStatus(poStatus);
+            purchaseOrder.poStatus = this.validatePoStatus(poStatus);
         if (deliveryMethod)
-            purchaseOrder.deliveryMethod = this.updateDeliveryMethod(deliveryMethod);
+            purchaseOrder.deliveryMethod = this.validateDeliveryMethod(deliveryMethod);
         if (paymentMethod)
             purchaseOrder.paymentMethod = paymentMethod;
         if (paymentStatus)
-            purchaseOrder.paymentStatus = this.updatePaymentStatus(paymentStatus);
+            purchaseOrder.paymentStatus = this.validatePaymentStatus(paymentStatus);
         if (completionDate)
             purchaseOrder.completionDate = new Date(completionDate);
 
@@ -158,7 +167,25 @@ export class PurchaseOrderService {
         return purchaseOrder;
     }
 
-    async generatePdf(
+    async updatePaymentStatus(
+        id: number,
+        paymentStatus: PaymentStatus,
+        user: User
+    ):Promise<PurchaseOrder> {
+        const purchaseOrder = await this.getPurchaseOrderById(id, user);
+
+        if(!purchaseOrder)
+            throw new NotFoundException(`PO with ID ${ id } not found.`);
+
+        purchaseOrder.paymentStatus = paymentStatus; //this.validatePaymentStatus(paymentStatus);
+
+        await purchaseOrder.save();
+
+        delete purchaseOrder.user;
+        return purchaseOrder;
+    }
+
+    generatePdf(
         purchaseOrder: PurchaseOrder,
         user: User,
     ): Promise<any> {
@@ -170,7 +197,7 @@ export class PurchaseOrderService {
 
         const docDefinition = docDesign(purchaseOrder, headerLogo, footerLogo);
 
-        return await printer.createPdfKitDocument(docDefinition, {});
+        return printer.createPdfKitDocument(docDefinition, {});
     }
 
     private async createPoId (user: User): Promise<string> {
@@ -178,20 +205,17 @@ export class PurchaseOrderService {
         const lastYearDate = new Date();
         lastYearDate.setFullYear(currentDate.getFullYear() - 1);
 
-        const poTillNow = await this.purchaseOrderRepo
-            .getPurchaseOrdersUntilDate(currentDate, user);
+        const yearlyPoCount = await this.purchaseOrderRepo
+            .getPurchaseOrdersBetweenDates(lastYearDate, currentDate, user)
+            .then(res => res.length);
 
-        const poTillLastYear = await this.purchaseOrderRepo
-            .getPurchaseOrdersUntilDate(lastYearDate, user);
-
-        const yearlyPoCount = poTillNow.length - poTillLastYear.length;
         if (yearlyPoCount < 0)
             throw new ConflictException('Something went wrong counting the POs.');
 
         return currentDate.getFullYear().toString().substr(-2) + yearlyPoCount.toString().padStart(3, '0');
     }
 
-    private updatePoStatus(poStatus: string): POStatus {
+    private validatePoStatus(poStatus: string): POStatus {
         if (poStatus.toUpperCase() === 'OPEN') {
             return POStatus.OPEN;
         }else if (poStatus.toUpperCase() === 'SENT') {
@@ -202,7 +226,7 @@ export class PurchaseOrderService {
         throw new BadRequestException('PO status is not valid');
     }
 
-    private updateDeliveryMethod(deliveryMethod: string): DeliveryMethod {
+    private validateDeliveryMethod(deliveryMethod: string): DeliveryMethod {
         if (deliveryMethod.toUpperCase() === 'PICKUP') {
             return DeliveryMethod.PICKUP;
         } else if (deliveryMethod.toUpperCase() === 'DELIVERY') {
@@ -211,7 +235,7 @@ export class PurchaseOrderService {
         throw new BadRequestException('Delivery method is not valid');
     }
 
-    private updatePaymentStatus(paymentStatus: string): PaymentStatus {
+    private validatePaymentStatus(paymentStatus: string): PaymentStatus {
         if (paymentStatus.toUpperCase() === 'PAID') {
             return PaymentStatus.PAID;
         } else if (paymentStatus.toUpperCase() === 'REFUND') {
@@ -251,4 +275,5 @@ export class PurchaseOrderService {
 
         return itemsList;
     }
+
 }

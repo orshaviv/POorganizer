@@ -24,7 +24,7 @@ export class AuthController {
         @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto
     ): Promise<void> {
-        UserLogoDto.validateData(userLogoDto);
+        userLogoDto = UserLogoDto.validateData(userLogoDto);
         return this.authService.signUp(userLogoDto, userPreferencesDto, authCredentialsDto);
     }
 

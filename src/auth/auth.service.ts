@@ -42,7 +42,7 @@ export class AuthService {
         const {username, email, firstName, lastName} = user;
 
         const payload = { username, email, firstName, lastName };
-        const accessToken = await this.jwtService.sign(payload);
+        const accessToken = this.jwtService.sign(payload);
         this.logger.debug(`Generated JWT with payload ${JSON.stringify(payload)}`);
 
         return { accessToken };
