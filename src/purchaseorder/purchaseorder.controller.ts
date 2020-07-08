@@ -19,8 +19,8 @@ import {PurchaseOrderDto} from "./dto/purchase-order.dto";
 import {UpdatePurchaseOrderDto} from "./dto/update-purchase-order.dto";
 import {PaymentStatusValidationPipe} from "./pipes/payment-status-validation.pipe";
 import {POStatusValidationPipe} from "./pipes/po-status-validation.pipe";
-import {Type} from "class-transformer";
-import {IsDate, IsNotEmpty} from "class-validator";
+
+
 
 @Controller('purchaseorders')
 @UseGuards(AuthGuard())
@@ -64,6 +64,7 @@ export class PurchaseOrderController {
         @Body(ValidationPipe) purchaseOrderDto: PurchaseOrderDto,
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
+        this.logger.verbose(JSON.stringify(purchaseOrderDto));
         return this.purchaseOrderService.createPurchaseOrder(purchaseOrderDto, user);
     }
 
@@ -86,13 +87,24 @@ export class PurchaseOrderController {
         return this.purchaseOrderService.updatePaymentStatus(id, paymentStatus, user);
     }
 
+    @Patch('id/:id/updatepostatus')
+    updatePoStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('poStatus', POStatusValidationPipe) poStatus: POStatus,
+        @GetUser() user: User,
+    ): Promise<PurchaseOrder> {
+        this.logger.verbose((`updating po ${id} status to ${poStatus}`))
+        return this.purchaseOrderService.updatePoStatus(id, poStatus, user);
+    }
+
     @Get('/id/:id/generatepdf')
     @HttpCode(200)
     async generatePdf(
         @Param('id', ParseIntPipe) id: number,
         @GetUser() user: User,
-        @Res() res
+        @Res() res,
     ): Promise<any> {
+
         const po = await this.purchaseOrderService.getPurchaseOrderById(id, user);
         if (!po)
             throw new NotFoundException('Purchase order with ID ${ id } not found.')
@@ -105,9 +117,9 @@ export class PurchaseOrderController {
         res.setHeader('Content-Type', 'application/pdf');
 
         doc.pipe(res);
+        doc.end();
 
         this.logger.verbose('Pdf file generated.');
-
-        doc.end();
     }
+
 }

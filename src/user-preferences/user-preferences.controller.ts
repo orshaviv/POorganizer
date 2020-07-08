@@ -1,6 +1,6 @@
 import {
     Body,
-    Controller,
+    Controller, Get,
     Logger,
     Patch,
     UploadedFiles,
@@ -27,6 +27,13 @@ export class UserPreferencesController {
         private readonly userPreferencesService: UserPreferencesService,
     ) {}
 
+    @Get()
+    getUserPreferences(
+        @GetUser() user: User
+    ): Promise<UserPreferences> {
+        return this.userPreferencesService.getUserPreferences(user);
+    }
+
     @Patch('update')
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'headerLogo', maxCount: 1 },
@@ -37,6 +44,7 @@ export class UserPreferencesController {
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto,
         @GetUser() user: User,
     ): Promise<UserPreferences> {
+        this.logger.verbose('updating user data');
         UserLogoDto.validateData(userLogoDto);
         return this.userPreferencesService.updateUserPreferences(userPreferencesDto, userLogoDto, user);
     }

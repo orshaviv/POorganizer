@@ -29,4 +29,11 @@ export class UserPreferencesService {
     ): Promise<UserPreferences> {
         return this.userPreferencesRepo.createOrUpdateUserPreferences(userPreferencesDto, userLogoDto, user);
     }
+
+    async getUserPreferences(
+        user: User
+    ): Promise<UserPreferences> {
+        const userPreferences = await user.userPreferences;
+        return userPreferences;
+    }
 }

@@ -25,6 +25,10 @@ import {UpdatePurchaseOrderDto} from "./dto/update-purchase-order.dto";
 
 import {docDesign, fonts} from "./document-design";
 
+import * as pdfMake from 'pdfmake/build/pdfmake';
+import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+
+
 @Injectable()
 export class PurchaseOrderService {
     private logger = new Logger('PurchaseOrderService');
@@ -80,13 +84,12 @@ export class PurchaseOrderService {
         const supplier = await this.supplierService.getOrCreateSupplier(supplierDTO, user);
         purchaseOrder.supplierName = supplier.name;
 
-        const { contactId, contactFirstName, contactLastName } = purchaseOrderDto;
+        const { contactId, contactName } = purchaseOrderDto;
         const contactDTO = new ContactDTO();
         contactDTO.contact_id = contactId;
-        contactDTO.first_name = contactFirstName;
-        contactDTO.last_name = contactLastName;
+        contactDTO.name = contactName;
         const contact = await this.contactService.getOrCreateContact(contactDTO, supplier, user);
-        purchaseOrder.contactName = contact.first_name + ' ' + contact.last_name;
+        purchaseOrder.contactName = contact.name;
 
         const { catalogNumbers, itemsId, quantities, details, itemsCost } = purchaseOrderDto;
 
@@ -185,10 +188,28 @@ export class PurchaseOrderService {
         return purchaseOrder;
     }
 
+    async updatePoStatus(
+        id: number,
+        poStatus: POStatus,
+        user: User
+    ):Promise<PurchaseOrder> {
+        const purchaseOrder = await this.getPurchaseOrderById(id, user);
+
+        if(!purchaseOrder)
+            throw new NotFoundException(`PO with ID ${ id } not found.`);
+
+        purchaseOrder.poStatus = poStatus;
+
+        await purchaseOrder.save();
+
+        delete purchaseOrder.user;
+        return purchaseOrder;
+    }
+
     generatePdf(
         purchaseOrder: PurchaseOrder,
         user: User,
-    ): Promise<any> {
+    ): any {
         const PdfPrinter = require('pdfmake');
         const printer = new PdfPrinter(fonts);
 
@@ -197,7 +218,7 @@ export class PurchaseOrderService {
 
         const docDefinition = docDesign(purchaseOrder, headerLogo, footerLogo);
 
-        return printer.createPdfKitDocument(docDefinition, {});
+        return printer.createPdfKitDocument(docDefinition, { });
     }
 
     private async createPoId (user: User): Promise<string> {

@@ -22,8 +22,7 @@ export class ContactRepository extends Repository<Contact> {
 
         if (search) {
             query.andWhere(
-                'supplier_contact.first_name LIKE :search OR ' +
-                'supplier_contact.last_name LIKE :search OR ' +
+                'supplier_contact.name LIKE :search OR ' +
                 'supplier_contact.email LIKE :search OR ' +
                 'contactInformation.phoneType LIKE :search OR ' +
                 'contactInformation.locale = :search OR ' +
@@ -58,8 +57,7 @@ export class ContactRepository extends Repository<Contact> {
     ): Promise<Contact> {
         let contact = new Contact();
 
-        contact.first_name = contactDto.first_name;
-        contact.last_name = contactDto.last_name;
+        contact.name = contactDto.name;
         contact.email = contactDto.email;
         contact.supplier = supplier;
         contact.user = user;

@@ -18,10 +18,7 @@ export class Contact extends BaseEntity {
     public id: number;
 
     @Column({ length: 50, unique: false })
-    public first_name: string;
-
-    @Column({ length: 50, unique: false })
-    public last_name: string;
+    public name: string;
 
     @Column({ unique: false, default: '' })
     public email!: string;

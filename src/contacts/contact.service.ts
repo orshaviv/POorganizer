@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException} from "@nestjs/common";
+import {BadRequestException, Injectable, InternalServerErrorException, Logger} from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
 import {ContactRepository} from "./contact.repository";
 import {User} from "../auth/user.entity";
@@ -8,7 +8,6 @@ import {Supplier} from "../suppliers/supplier.entity";
 import {ContactInformationDto} from "./dto/contact-information.dto";
 import {ContactInformationRepository} from "./contact-information.repository";
 import {ContactInformation} from "./contact-information.entity";
-import {PurchaseOrderDto} from "../purchaseorder/dto/purchase-order.dto";
 
 @Injectable()
 export class ContactService {
@@ -38,14 +37,20 @@ export class ContactService {
     }
 
     async getContactByName(
-        firstName: string,
-        lastName: string,
+        name: string,
         user: User,
     ): Promise<Contact> {
-        const contact = await this.contactsRepo.findOne( { first_name: firstName, last_name: lastName, userId: user.id });
+        const contact = await this.contactsRepo.findOne( { name, userId: user.id });
 
         this.logger.verbose(`Contact found: ${JSON.stringify(contact)}`);
         return contact;
+    }
+
+    async getContactBySupplierId(
+        supplierId: number,
+        user: User,
+    ): Promise<Contact[]> {
+        return await this.contactsRepo.find({ supplierId, userId: user.id });
     }
 
     async addContact(
@@ -76,10 +81,10 @@ export class ContactService {
         supplier: Supplier,
         user: User
     ): Promise<Contact> {
-        const { contact_id: contactId, first_name: contactFirstName, last_name: contactLastName } = contactDto;
+        const { contact_id: contactId, name } = contactDto;
 
-        if (!contactId && !contactFirstName) {
-            throw new BadRequestException('Specify contact ID or first name.');
+        if (!contactId && !name) {
+            throw new BadRequestException('Specify contact ID or name.');
         }
 
         let contact: Contact;
@@ -88,16 +93,15 @@ export class ContactService {
             contact = await this.getContactById(contactId, user);
         }
 
-        if (!contact && contactFirstName || contactLastName) {
+        if (!contact && name) {
             this.logger.log('Find contact by name.');
-            contact = await this.getContactByName(contactFirstName, contactLastName, user);
+            contact = await this.getContactByName(name, user);
         }
 
-        if (!contact && contactFirstName) {
+        if (!contact && name) {
             this.logger.log('Creating new contact.');
             let contactDto = new ContactDTO();
-            contactDto.first_name = contactFirstName;
-            contactDto.last_name = contactLastName;
+            contactDto.name = name;
             contact = await this.addContact(contactDto, supplier, user);
         }
 

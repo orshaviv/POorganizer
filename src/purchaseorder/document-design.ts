@@ -1,5 +1,4 @@
 import {PurchaseOrder} from "../purchaseorder/purchaseorder.entity";
-import path from "path";
 
 export const fonts = {
     Roboto: {

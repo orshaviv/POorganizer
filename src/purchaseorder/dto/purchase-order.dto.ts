@@ -28,11 +28,7 @@ export class PurchaseOrderDto {
 
     @IsOptional()
     @IsString()
-    public contactFirstName: string;
-
-    @IsOptional()
-    @IsString()
-    public contactLastName: string;
+    public contactName: string;
 
     @IsOptional()
     public contactId: number;

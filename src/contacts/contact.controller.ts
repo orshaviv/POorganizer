@@ -36,6 +36,14 @@ export class ContactController {
         return this.contactService.getContactById(id, user);
     }
 
+    @Get('supplierid/:id')
+    getContactBySupplierId(
+        @Param('id', ParseIntPipe) supplierId: number,
+        @GetUser() user: User,
+    ): Promise<Contact[]> {
+        return this.contactService.getContactBySupplierId(supplierId, user);
+    }
+
     @Post('id/:id/addinformation')
     @UsePipes(ValidationPipe)
     addContactInformation(
