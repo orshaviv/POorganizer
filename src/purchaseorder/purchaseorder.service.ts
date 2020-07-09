@@ -92,14 +92,17 @@ export class PurchaseOrderService {
         purchaseOrder.contactName = contact.name;
 
         const { catalogNumbers, itemsId, quantities, details, itemsCost } = purchaseOrderDto;
-
         const itemsList = await this.makeItemsList(catalogNumbers, itemsId, quantities, details, itemsCost, user);
 
         purchaseOrder.catalogNumber = itemsList.map(item => item.catalogNumber);
         purchaseOrder.quantity = quantities.map(quantity => quantity.toString());
         purchaseOrder.details = details;
         purchaseOrder.itemCost = itemsCost.map(itemCost => itemCost.toString());
-        purchaseOrder.totalCostBeforeTax = itemsCost.reduce( (a, b) => a + b, 0);
+
+        purchaseOrder.totalCostBeforeTax = 0;
+        for (let i = 0; i < quantities.length; i++) {
+            purchaseOrder.totalCostBeforeTax += itemsCost[i] * quantities[i];
+        }
         purchaseOrder.taxPercentage = purchaseOrderDto.taxPercentage || this.defaultTaxValue;
 
         purchaseOrder.poId = await this.createPoId(user);

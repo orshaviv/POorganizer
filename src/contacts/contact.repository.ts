@@ -64,10 +64,9 @@ export class ContactRepository extends Repository<Contact> {
 
         try{
             await contact.save();
-            this.logger.verbose('Contact added.');
         }catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
-                this.logger.verbose(`Contact with the email address "${contactDto.email}" already exists`, error.code);
+                // this.logger.verbose(`Contact with the email address "${contactDto.email}" already exists`, error.code);
                 throw new ConflictException(`Contact with the email address "${contactDto.email}" already exists`);
             }
             this.logger.error(`Cannot add contact`, error.stack);

@@ -44,7 +44,7 @@ export class UserPreferencesController {
         @Body(ValidationPipe) userPreferencesDto: UserPreferencesDto,
         @GetUser() user: User,
     ): Promise<UserPreferences> {
-        this.logger.verbose('updating user data');
+        // this.logger.verbose('updating user data');
         UserLogoDto.validateData(userLogoDto);
         return this.userPreferencesService.updateUserPreferences(userPreferencesDto, userLogoDto, user);
     }

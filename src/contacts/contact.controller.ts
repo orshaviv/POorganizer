@@ -24,7 +24,6 @@ export class ContactController {
         @Query('search') search: string,
         @GetUser() user: User,
     ): Promise<Contact[]> {
-        this.logger.verbose(`User ${ user.firstName } ${ user.lastName } retrieving contacts. Filters: ${ JSON.stringify(search) }.`);
         return this.contactService.getContacts(search, user);
     }
 

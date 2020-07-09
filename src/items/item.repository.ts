@@ -41,11 +41,11 @@ export class ItemRepository extends Repository<Item> {
         let item = await this.findOne( { catalogNumber, userId : user.id })
 
         if (item) {
-            this.logger.verbose(`Item ${ catalogNumber } already exists in the database.`);
+            // this.logger.verbose(`Item ${ catalogNumber } already exists in the database.`);
             return item;
         }
 
-        this.logger.verbose(`Creating new item ${ catalogNumber }.`);
+        // this.logger.verbose(`Creating new item ${ catalogNumber }.`);
         item = new Item();
         item.catalogNumber = catalogNumber;
         item.name = name;
@@ -55,7 +55,7 @@ export class ItemRepository extends Repository<Item> {
         try {
             await item.save();
         }catch(error){
-            this.logger.error('Error saving new item.', error.stack);
+            // this.logger.error('Error saving new item.', error.stack);
             throw error;
         }
 
@@ -72,7 +72,7 @@ export class ItemRepository extends Repository<Item> {
         let item = await this.findOne( { catalogNumber, id: Not(id), userId: user.id })
 
         if (item) {
-            this.logger.verbose(`Item ${ catalogNumber } already exists in the database.`);
+            // this.logger.verbose(`Item ${ catalogNumber } already exists in the database.`);
             throw new UnauthorizedException(`Item ${ catalogNumber } already exists in the database.`);
         }
 

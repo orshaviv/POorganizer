@@ -1,6 +1,5 @@
 import {EntityRepository, Not, Repository} from "typeorm";
 import {Supplier} from "./supplier.entity";
-import {GetSuppliersFilterDto} from "./dto/get-suppliers-filter.dto";
 import {SupplierDTO} from "./dto/supplier.dto";
 import {
     ConflictException,
@@ -61,7 +60,6 @@ export class SupplierRepository extends Repository<Supplier> {
     ): Promise<Supplier> {
 
         if ( await this.findOne({ where: { name: supplierDto.name, userId: user.id } }) ) {
-            this.logger.verbose(`Supplier named "${supplierDto.name}" already exists.`);
             throw new ConflictException(`Supplier named "${supplierDto.name}" already exists.`);
         }
 

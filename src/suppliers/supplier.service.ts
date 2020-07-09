@@ -30,20 +30,14 @@ export class SupplierService {
         id: number,
         user: User,
     ): Promise<Supplier> {
-        const supplier = await this.suppliersRepo.getSupplierById(id, user);
-
-        this.logger.verbose(`Supplier found: ${ JSON.stringify(supplier) }`);
-        return supplier;
+        return await this.suppliersRepo.getSupplierById(id, user);
     }
 
     async getSupplierByName(
         name: string,
         user: User
     ): Promise<Supplier> {
-        const supplier = await this.suppliersRepo.getSupplierByName(name, user);
-
-        this.logger.verbose(`Supplier found: ${ JSON.stringify(supplier) }`);
-        return supplier;
+        return await this.suppliersRepo.getSupplierByName(name, user);
     }
 
     async addSupplier(
@@ -95,17 +89,17 @@ export class SupplierService {
         let supplier: Supplier;
 
         if (supplierId) {
-            this.logger.log('Find supplier by ID.');
+            // this.logger.log('Find supplier by ID.');
             supplier = await this.getSupplierById(supplierId, user);
         }
 
         if (!supplier && supplierName){
-            this.logger.log('Find supplier by name.');
+            // this.logger.log('Find supplier by name.');
             supplier = await this.getSupplierByName(supplierName, user);
         }
 
         if (!supplier && supplierName) {
-            this.logger.log('Creating new supplier.');
+            // this.logger.log('Creating new supplier.');
             let supplierDto = new SupplierDTO();
             supplierDto.name = supplierName;
             supplier = await this.addSupplier(supplierDto, user);

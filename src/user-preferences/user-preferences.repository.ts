@@ -20,7 +20,7 @@ export class UserPreferencesRepository extends Repository<UserPreferences> {
             userPreferences = await user.userPreferences;
 
         if (!userPreferences){
-            this.logger.verbose('creating new user preferences.')
+            // this.logger.verbose('creating new user preferences.')
             userPreferences = new UserPreferences();
         }
 

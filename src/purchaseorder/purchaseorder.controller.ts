@@ -64,7 +64,6 @@ export class PurchaseOrderController {
         @Body(ValidationPipe) purchaseOrderDto: PurchaseOrderDto,
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
-        this.logger.verbose(JSON.stringify(purchaseOrderDto));
         return this.purchaseOrderService.createPurchaseOrder(purchaseOrderDto, user);
     }
 
@@ -93,7 +92,6 @@ export class PurchaseOrderController {
         @Body('poStatus', POStatusValidationPipe) poStatus: POStatus,
         @GetUser() user: User,
     ): Promise<PurchaseOrder> {
-        this.logger.verbose((`updating po ${id} status to ${poStatus}`))
         return this.purchaseOrderService.updatePoStatus(id, poStatus, user);
     }
 
@@ -104,7 +102,6 @@ export class PurchaseOrderController {
         @GetUser() user: User,
         @Res() res,
     ): Promise<any> {
-
         const po = await this.purchaseOrderService.getPurchaseOrderById(id, user);
         if (!po)
             throw new NotFoundException('Purchase order with ID ${ id } not found.')

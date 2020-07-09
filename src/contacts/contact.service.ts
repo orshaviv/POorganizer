@@ -26,31 +26,25 @@ export class ContactService {
         return this.contactsRepo.getContacts(search, user);
     }
 
-    async getContactById(
+    getContactById(
         id: number,
         user: User,
     ): Promise<Contact> {
-        const contact = await this.contactsRepo.findOne( { id: id, userId: user.id });
-
-        this.logger.verbose(`Contact found: ${JSON.stringify(contact)}`);
-        return contact;
+        return this.contactsRepo.findOne( { id: id, userId: user.id });
     }
 
-    async getContactByName(
+    getContactByName(
         name: string,
         user: User,
     ): Promise<Contact> {
-        const contact = await this.contactsRepo.findOne( { name, userId: user.id });
-
-        this.logger.verbose(`Contact found: ${JSON.stringify(contact)}`);
-        return contact;
+        return this.contactsRepo.findOne( { name, userId: user.id });
     }
 
-    async getContactBySupplierId(
+    getContactBySupplierId(
         supplierId: number,
         user: User,
     ): Promise<Contact[]> {
-        return await this.contactsRepo.find({ supplierId, userId: user.id });
+        return this.contactsRepo.find({ supplierId, userId: user.id });
     }
 
     async addContact(
@@ -89,17 +83,17 @@ export class ContactService {
 
         let contact: Contact;
         if (contactId) {
-            this.logger.log('Find contact by ID.');
+            // this.logger.log('Find contact by ID.');
             contact = await this.getContactById(contactId, user);
         }
 
         if (!contact && name) {
-            this.logger.log('Find contact by name.');
+            // this.logger.log('Find contact by name.');
             contact = await this.getContactByName(name, user);
         }
 
         if (!contact && name) {
-            this.logger.log('Creating new contact.');
+            // this.logger.log('Creating new contact.');
             let contactDto = new ContactDTO();
             contactDto.name = name;
             contact = await this.addContact(contactDto, supplier, user);
@@ -120,8 +114,6 @@ export class ContactService {
         if (!contact) {
             contact = await this.getContactById(contactInformationDto.contactId, user);
         }
-
-        this.logger.verbose('Adding contact information.');
         return await this.contactsInformationRepo.addContactInformation(contactInformationDto, contact, user);
     }
 
